@@ -26,9 +26,6 @@
   ];
 
   $: activeTask = state.activeTask;
-  $: queuedTasks = state.queuedTasks;
-  $: queueCount = queuedTasks.length;
-  $: themeLabel = themeOptions.find((option) => option.id === theme)?.label ?? "Theme";
   $: shortcutLabel = navigator.platform.includes("Mac") ? "Cmd" : "Ctrl";
 
   $: if (!activeTask) {
@@ -117,82 +114,57 @@
       void submit("failed");
     }
   }
-
-  function formatCreatedAt(value: string): string {
-    return new Intl.DateTimeFormat(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-      month: "short",
-      day: "numeric"
-    }).format(new Date(value));
-  }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
 <main class={`shell theme--${theme}`}>
   <section class="window">
-    <header class="window__header">
-      <div>
-        <p class="eyebrow">i-am-mcp</p>
-        <h1>{#if activeTask}Active task{:else}Waiting for tasks{/if}</h1>
-      </div>
-
-      <div class="header-right">
-        <div
-          class:is-live={state.isConnected}
-          class="status-pill"
-          aria-live="polite"
-        >
-          {#if state.isConnected}
-            Connected
-          {:else}
-            Demo mode
-          {/if}
-        </div>
-
-        <div class="theme-menu-wrap" bind:this={themeMenuWrap}>
-          <button
-            class="menu-button"
-            type="button"
-            on:click={toggleThemeMenu}
-            aria-expanded={isThemeMenuOpen}
-            aria-haspopup="menu"
-            aria-label="Choose theme"
-          >
-            Theme: {themeLabel}
-          </button>
-          {#if isThemeMenuOpen}
-            <div class="theme-menu" role="menu">
-              {#each themeOptions as option}
-                <button
-                  class="theme-menu__item"
-                  class:is-active={option.id === theme}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={option.id === theme}
-                  on:click={() => applyTheme(option.id)}
-                >
-                  {option.label}
-                </button>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      </div>
-    </header>
-
     {#if activeTask}
-      <section class="task-card" aria-live="polite">
-        <div class="task-card__meta">
-          <span class="task-tag">Active task</span>
-          <span>{formatCreatedAt(activeTask.createdAt)}</span>
+      <section class="task-layout" aria-live="polite">
+        <div class="instruction-panel">
+          <p class="instruction">{activeTask.instruction}</p>
         </div>
 
-        <p class="instruction">{activeTask.instruction}</p>
+        <div class="task-layout__header">
+          <label class="feedback" for="feedback">Feedback</label>
 
-        <label class="feedback" for="feedback">
-          <span>Feedback</span>
+          <div class="theme-menu-wrap" bind:this={themeMenuWrap}>
+            <button
+              class="theme-button"
+              type="button"
+              on:click={toggleThemeMenu}
+              aria-expanded={isThemeMenuOpen}
+              aria-haspopup="menu"
+              aria-label="Choose theme"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M20 14.5A7.5 7.5 0 0 1 9.5 4a.75.75 0 0 0-.95.95 8.5 8.5 0 1 0 10.5 10.5.75.75 0 0 0 .95-.95Z"
+                />
+              </svg>
+              <span class="sr-only">Choose theme</span>
+            </button>
+            {#if isThemeMenuOpen}
+              <div class="theme-menu" role="menu">
+                {#each themeOptions as option}
+                  <button
+                    class="theme-menu__item"
+                    class:is-active={option.id === theme}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={option.id === theme}
+                    on:click={() => applyTheme(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        </div>
+
+        <label class="feedback feedback--field" for="feedback">
           <textarea
             id="feedback"
             bind:value={feedback}
@@ -229,31 +201,11 @@
       </section>
     {:else}
       <section class="empty-state" aria-live="polite">
-        <p class="empty-state__title">No active human task</p>
+        <p class="empty-state__title">No active task</p>
         <p class="empty-state__body">
-          The app is ready for the next MCP request.
+          The app is ready for the next request.
         </p>
       </section>
     {/if}
-
-    <aside class="queue-panel" aria-live="polite">
-      <div class="queue-panel__header">
-        <h2>Queue</h2>
-        <span class="queue-count">{queueCount}</span>
-      </div>
-
-      {#if queueCount > 0}
-        <ol class="queue-list">
-          {#each queuedTasks as task (task.id)}
-            <li class="queue-item">
-              <p>{task.instruction}</p>
-              <span>{formatCreatedAt(task.createdAt)}</span>
-            </li>
-          {/each}
-        </ol>
-      {:else}
-        <p class="queue-empty">No pending tasks.</p>
-      {/if}
-    </aside>
   </section>
 </main>
