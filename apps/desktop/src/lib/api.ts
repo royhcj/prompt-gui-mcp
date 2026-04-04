@@ -1,3 +1,4 @@
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { writable } from "svelte/store";
 import type {
   DesktopBridge,
@@ -7,6 +8,7 @@ import type {
 
 const BACKEND_ORIGIN =
   import.meta.env.VITE_I_AM_MCP_BACKEND_ORIGIN ?? "http://127.0.0.1:43118";
+let backendOriginPromise: Promise<string> | null = null;
 
 const defaultState: HumanTaskState = {
   activeTask: null,
@@ -14,8 +16,26 @@ const defaultState: HumanTaskState = {
   isConnected: false
 };
 
-async function fetchState(): Promise<HumanTaskState> {
-  const response = await fetch(`${BACKEND_ORIGIN}/api/state`);
+async function resolveBackendOrigin(): Promise<string> {
+  if (backendOriginPromise) {
+    return backendOriginPromise;
+  }
+
+  if (!isTauri()) {
+    backendOriginPromise = Promise.resolve(BACKEND_ORIGIN);
+    return backendOriginPromise;
+  }
+
+  backendOriginPromise = invoke<string>("get_backend_origin").catch(() => {
+    backendOriginPromise = Promise.resolve(BACKEND_ORIGIN);
+    return BACKEND_ORIGIN;
+  });
+
+  return backendOriginPromise;
+}
+
+async function fetchState(origin: string): Promise<HumanTaskState> {
+  const response = await fetch(`${origin}/api/state`);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch task state: ${response.status}`);
@@ -30,15 +50,18 @@ function createHttpBridge(): DesktopBridge {
   let reconnectTimer: number | null = null;
 
   const connect = async (): Promise<void> => {
+    let origin: string;
+
     try {
-      state.set(await fetchState());
+      origin = await resolveBackendOrigin();
+      state.set(await fetchState(origin));
     } catch {
       scheduleReconnect();
       return;
     }
 
     eventSource?.close();
-    eventSource = new EventSource(`${BACKEND_ORIGIN}/api/events`);
+    eventSource = new EventSource(`${origin}/api/events`);
 
     eventSource.addEventListener("state", (event) => {
       const message = event as MessageEvent<string>;
@@ -84,8 +107,9 @@ function createHttpBridge(): DesktopBridge {
       };
     },
     async submitTaskResult(result: SubmitTaskResult) {
+      const origin = await resolveBackendOrigin();
       const response = await fetch(
-        `${BACKEND_ORIGIN}/api/tasks/${result.taskId}/result`,
+        `${origin}/api/tasks/${result.taskId}/result`,
         {
           method: "POST",
           headers: {

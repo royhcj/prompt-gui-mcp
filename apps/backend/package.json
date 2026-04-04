@@ -3,12 +3,12 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "pnpm build && node dist/src/index.js",
-    "start": "node dist/src/index.js",
-    "simulate": "pnpm build && node dist/scripts/simulate-tool-call.js",
+    "build": "node scripts/build.mjs",
+    "dev": "pnpm build && node dist/src/index.cjs",
+    "start": "node dist/src/index.cjs",
+    "simulate": "pnpm build && node dist/scripts/simulate-tool-call.cjs",
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

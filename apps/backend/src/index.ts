@@ -1,32 +1,32 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { logger } from "./logger.js";
 import {
   handleTellHumanToDo,
   tellHumanToDoInputSchema
 } from "./mcp/tell-human-to-do.js";
-import { startControlServer } from "./transport/http.js";
+import { startBackendHttpServer } from "./transport/http.js";
 
-function resolveControlPort(): number {
-  const rawPort = process.env.I_AM_MCP_CONTROL_PORT;
+const DEFAULT_SERVER_PORT = 43118;
+
+function resolveServerPort(): number {
+  const rawPort =
+    process.env.I_AM_MCP_SERVER_PORT ?? process.env.I_AM_MCP_CONTROL_PORT;
 
   if (!rawPort) {
-    return 43118;
+    return DEFAULT_SERVER_PORT;
   }
 
   const parsedPort = Number(rawPort);
   const isValidPort = Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65535;
 
   if (!isValidPort) {
-    throw new Error(`Invalid I_AM_MCP_CONTROL_PORT: ${rawPort}`);
+    throw new Error(`Invalid backend port: ${rawPort}`);
   }
 
   return parsedPort;
 }
 
-async function main(): Promise<void> {
-  await startControlServer(resolveControlPort());
-
+function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "i-am-mcp-backend",
     version: "0.1.0"
@@ -55,9 +55,16 @@ async function main(): Promise<void> {
     }
   );
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  logger.info("MCP backend server started on stdio transport");
+  return server;
+}
+
+async function main(): Promise<void> {
+  const port = resolveServerPort();
+  await startBackendHttpServer({
+    port,
+    createMcpServer
+  });
+  logger.info({ port }, "MCP backend server started on HTTP transport");
 }
 
 main().catch((error: unknown) => {

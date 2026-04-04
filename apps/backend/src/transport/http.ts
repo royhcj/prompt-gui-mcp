@@ -1,4 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { logger } from "../logger.js";
 import { taskQueue } from "../services/runtime.js";
 import type { HumanTaskState, SubmitTaskResult } from "../types.js";
@@ -38,7 +40,30 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
   return payload ? JSON.parse(payload) : {};
 }
 
-export async function startControlServer(port = DEFAULT_PORT): Promise<void> {
+function writeJsonRpcError(
+  response: ServerResponse,
+  statusCode: number,
+  message: string
+): void {
+  writeJson(response, statusCode, {
+    jsonrpc: "2.0",
+    error: {
+      code: -32000,
+      message
+    },
+    id: null
+  });
+}
+
+type StartBackendHttpServerOptions = {
+  port?: number;
+  createMcpServer: () => McpServer;
+};
+
+export async function startBackendHttpServer({
+  port = DEFAULT_PORT,
+  createMcpServer
+}: StartBackendHttpServerOptions): Promise<void> {
   const server = createServer(async (request, response) => {
     const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "127.0.0.1"}`);
 
@@ -53,7 +78,10 @@ export async function startControlServer(port = DEFAULT_PORT): Promise<void> {
     }
 
     if (request.method === "GET" && url.pathname === "/health") {
-      writeJson(response, 200, { ok: true });
+      writeJson(response, 200, {
+        ok: true,
+        mcpEndpoint: "/mcp"
+      });
       return;
     }
 
@@ -105,6 +133,57 @@ export async function startControlServer(port = DEFAULT_PORT): Promise<void> {
         });
       }
 
+      return;
+    }
+
+    if (url.pathname === "/mcp" && request.method === "POST") {
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined
+      });
+      const mcpServer = createMcpServer();
+
+      response.on("close", () => {
+        void transport.close();
+        void mcpServer.close();
+      });
+
+      try {
+        const body = await readJson(request);
+        await mcpServer.connect(transport);
+        await transport.handleRequest(request, response, body);
+      } catch (error) {
+        logger.error({ error }, "Failed to process MCP request");
+
+        if (!response.headersSent) {
+          writeJson(response, 500, {
+            jsonrpc: "2.0",
+            error: {
+              code: -32603,
+              message: "Internal server error"
+            },
+            id: null
+          });
+        }
+      }
+
+      return;
+    }
+
+    if (url.pathname === "/mcp" && request.method === "GET") {
+      writeJsonRpcError(
+        response,
+        405,
+        "Method not allowed. Use POST /mcp for stateless Streamable HTTP."
+      );
+      return;
+    }
+
+    if (url.pathname === "/mcp" && request.method === "DELETE") {
+      writeJsonRpcError(
+        response,
+        405,
+        "Method not allowed. Stateless Streamable HTTP sessions do not support DELETE."
+      );
       return;
     }
 

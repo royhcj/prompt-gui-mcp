@@ -1,31 +1,29 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-function inheritedEnv(): Record<string, string> {
-  const env: Record<string, string> = {};
+const DEFAULT_SERVER_PORT = 43118;
 
-  for (const [key, value] of Object.entries(process.env)) {
-    if (typeof value === "string") {
-      env[key] = value;
-    }
+function resolveServerPort(): number {
+  const rawPort =
+    process.env.I_AM_MCP_SERVER_PORT ?? process.env.I_AM_MCP_CONTROL_PORT;
+
+  if (!rawPort) {
+    return DEFAULT_SERVER_PORT;
   }
 
-  return env;
+  const port = Number(rawPort);
+
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+    throw new Error(`Invalid backend port: ${rawPort}`);
+  }
+
+  return port;
 }
 
 async function main(): Promise<void> {
-  const controlPort = process.env.I_AM_MCP_CONTROL_PORT;
-  const env = inheritedEnv();
-
-  if (controlPort) {
-    env.I_AM_MCP_CONTROL_PORT = controlPort;
-  }
-
-  const transport = new StdioClientTransport({
-    command: "node",
-    args: ["dist/src/index.js"],
-    env
-  });
+  const transport = new StreamableHTTPClientTransport(
+    new URL(`http://127.0.0.1:${resolveServerPort()}/mcp`)
+  );
 
   const client = new Client({
     name: "i-am-mcp-simulator",

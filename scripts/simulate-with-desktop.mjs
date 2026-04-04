@@ -1,74 +1,14 @@
 import { spawn } from "node:child_process";
-import {
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile
-} from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import net from "node:net";
 import { fileURLToPath } from "node:url";
+import {
+  createTempTauriConfig,
+  desktopWorkspace,
+  reservePort
+} from "../apps/desktop/scripts/tauri-dev-tools.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-const desktopWorkspace = fileURLToPath(new URL("../apps/desktop/", import.meta.url));
 const backendWorkspace = fileURLToPath(new URL("../apps/backend/", import.meta.url));
-
-async function readTauriConfig() {
-  const configPath = fileURLToPath(
-    new URL("../apps/desktop/src-tauri/tauri.conf.json", import.meta.url)
-  );
-  const raw = await readFile(configPath, "utf8");
-  return JSON.parse(raw);
-}
-
-async function reservePort() {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.unref();
-    server.on("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (!address || typeof address === "string") {
-        server.close(() => {
-          reject(new Error("Failed to reserve a localhost port."));
-        });
-        return;
-      }
-
-      const { port } = address;
-      server.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-
-        resolve(port);
-      });
-    });
-  });
-}
-
-async function createTempTauriConfig(devPort) {
-  const config = await readTauriConfig();
-  const tempDir = await mkdtemp(join(tmpdir(), "i-am-mcp-simulate-"));
-  const configPath = join(tempDir, "tauri.simulate.conf.json");
-  const devUrl = `http://127.0.0.1:${devPort}`;
-
-  config.build = {
-    ...(config.build ?? {}),
-    devUrl,
-    beforeDevCommand: `pnpm exec vite --host 127.0.0.1 --port ${devPort} --strictPort`
-  };
-
-  await writeFile(configPath, JSON.stringify(config, null, 2), "utf8");
-
-  return {
-    configPath,
-    devUrl,
-    cleanup: () => rm(tempDir, { recursive: true, force: true })
-  };
-}
+const backendPort = "43118";
 
 function run(command, args, options = {}) {
   return spawn(command, args, {
@@ -108,22 +48,15 @@ async function waitForDesktop(desktop, desktopDevUrl, timeoutMs) {
 }
 
 async function main() {
-  const [desktopPort, controlPort] = await Promise.all([
-    reservePort(),
-    reservePort()
-  ]);
-  const backendOrigin = `http://127.0.0.1:${controlPort}`;
-  const tempConfig = await createTempTauriConfig(desktopPort);
+  const desktopPort = await reservePort();
+  const tempConfig = await createTempTauriConfig(
+    desktopPort,
+    `pnpm prepare:sidecar && pnpm exec vite --host 127.0.0.1 --port ${desktopPort} --strictPort`
+  );
   const desktop = run(
     "pnpm",
     ["exec", "tauri", "dev", "--config", tempConfig.configPath],
-    {
-      cwd: desktopWorkspace,
-      env: {
-        ...process.env,
-        VITE_I_AM_MCP_BACKEND_ORIGIN: backendOrigin
-      }
-    }
+    { cwd: desktopWorkspace }
   );
 
   let isCleaningUp = false;
@@ -154,7 +87,7 @@ async function main() {
     cwd: backendWorkspace,
     env: {
       ...process.env,
-      I_AM_MCP_CONTROL_PORT: String(controlPort)
+      I_AM_MCP_SERVER_PORT: backendPort
     }
   });
 

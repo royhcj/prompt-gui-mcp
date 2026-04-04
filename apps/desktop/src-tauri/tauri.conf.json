@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "identifier": "dev.roy.iammcp",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm prepare:sidecar && pnpm dev",
+    "beforeBuildCommand": "pnpm prepare:sidecar && pnpm build",
     "devUrl": "http://127.0.0.1:4173",
     "frontendDist": "../dist"
   },
@@ -25,6 +26,12 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all"
+    "targets": "all",
+    "resources": {
+      "../../backend/dist": "backend/dist"
+    },
+    "externalBin": [
+      "bin/i-am-mcp-node"
+    ]
   }
 }
