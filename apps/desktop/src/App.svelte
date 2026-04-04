@@ -41,6 +41,8 @@
       theme = savedTheme;
     }
 
+    void bridge.setWindowTheme(theme);
+
     const unsubscribe = bridge.subscribe((nextState) => {
       state = nextState;
     });
@@ -75,6 +77,7 @@
     theme = nextTheme;
     isThemeMenuOpen = false;
     window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    void bridge.setWindowTheme(nextTheme);
   }
 
   async function submit(status: SubmitTaskResult["status"]): Promise<void> {
@@ -128,8 +131,6 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <main class={`shell theme--${theme}`}>
-  <div class="native-titlebar" data-tauri-drag-region aria-hidden="true"></div>
-
   <section class="window">
     <header class="window__header">
       <div>

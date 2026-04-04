@@ -129,6 +129,13 @@ function createHttpBridge(): DesktopBridge {
     },
     async focusWindow() {
       window.focus();
+    },
+    async setWindowTheme(theme) {
+      if (!isTauri()) {
+        return;
+      }
+
+      await invoke("set_window_theme", { theme });
     }
   };
 }

@@ -76,11 +76,6 @@ textarea {
   --success: #53dcab;
 }
 
-.native-titlebar {
-  height: var(--title-height);
-  background: transparent;
-}
-
 .theme-menu-wrap {
   position: relative;
 }

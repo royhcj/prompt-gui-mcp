@@ -7,11 +7,16 @@ use std::{
     process::{Child, Command, Stdio},
     sync::Mutex,
 };
-use tauri::{Manager, RunEvent, Runtime, State, WindowEvent};
+use tauri::{
+    Manager, RunEvent, Runtime, State, WindowEvent, utils::config::Color,
+};
 
 const BACKEND_ENTRY_RELATIVE_PATH: &str = "backend/dist/src/index.cjs";
 const BACKEND_PORT: u16 = 43118;
 const SIDECAR_NAME: &str = "i-am-mcp-node";
+const MAIN_WINDOW_LABEL: &str = "main";
+const LIGHT_WINDOW_BACKGROUND: Color = Color(235, 223, 205, 255);
+const DART_WINDOW_BACKGROUND: Color = Color(16, 39, 58, 255);
 
 struct BackendState {
     origin: String,
@@ -37,6 +42,23 @@ impl BackendState {
 #[tauri::command]
 fn get_backend_origin(state: State<'_, BackendState>) -> String {
     state.origin.clone()
+}
+
+#[tauri::command]
+fn set_window_theme<R: Runtime>(app: tauri::AppHandle<R>, theme: String) -> Result<(), String> {
+    let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
+        return Err("Main window is not available".to_string());
+    };
+
+    #[cfg(target_os = "macos")]
+    window
+        .set_background_color(Some(window_background_for_theme(&theme)))
+        .map_err(|error| error.to_string())?;
+
+    #[cfg(not(target_os = "macos"))]
+    let _ = (window, theme);
+
+    Ok(())
 }
 
 fn sidecar_binary_name() -> String {
@@ -97,15 +119,29 @@ fn spawn_backend<R: Runtime>(app: &tauri::App<R>) -> Result<BackendState, String
     Ok(BackendState::new(origin, child))
 }
 
+#[cfg(target_os = "macos")]
+fn window_background_for_theme(theme: &str) -> Color {
+    match theme {
+        "dart" => DART_WINDOW_BACKGROUND,
+        _ => LIGHT_WINDOW_BACKGROUND,
+    }
+}
+
 fn main() {
     let app = tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_backend_origin])
+        .invoke_handler(tauri::generate_handler![
+            get_backend_origin,
+            set_window_theme
+        ])
         .setup(|app| {
             let backend_state = spawn_backend(app)
                 .map_err(|error| io::Error::new(io::ErrorKind::Other, error))?;
             app.manage(backend_state);
 
-            if let Some(window) = app.get_webview_window("main") {
+            if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+                #[cfg(target_os = "macos")]
+                let _ = window.set_background_color(Some(LIGHT_WINDOW_BACKGROUND));
+
                 let app_handle = app.handle().clone();
                 window.on_window_event(move |event| {
                     if let WindowEvent::CloseRequested { api, .. } = event {

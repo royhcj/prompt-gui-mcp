@@ -23,6 +23,7 @@ export type DesktopBridge = {
   subscribe(callback: (state: HumanTaskState) => void): () => void;
   submitTaskResult(result: SubmitTaskResult): Promise<void>;
   focusWindow(): Promise<void>;
+  setWindowTheme(theme: "light" | "dart"): Promise<void>;
 };
 
 declare global {
