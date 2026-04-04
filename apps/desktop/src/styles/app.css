@@ -87,6 +87,27 @@ textarea {
   --success: #53dcab;
 }
 
+.shell.theme--doraemon {
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  --app-background: linear-gradient(180deg, #7dd7ff 0%, #d7f4ff 100%);
+  --window-background:
+    radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.9), transparent 20%),
+    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.72), transparent 24%),
+    radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.5), transparent 42%),
+    linear-gradient(180deg, #dff8ff 0%, #b8e9ff 100%);
+  --window-surface: rgba(255, 255, 255, 0.9);
+  --panel-surface: rgba(255, 255, 255, 0.96);
+  --surface-muted: rgba(0, 119, 190, 0.12);
+  --border: rgba(0, 94, 155, 0.18);
+  --shadow: 0 22px 50px rgba(0, 82, 145, 0.18);
+  --text: #08324d;
+  --text-muted: #44708a;
+  --accent: #0d87d8;
+  --accent-strong: #07568f;
+  --danger: #d94a3b;
+  --success: #1c8e66;
+}
+
 .theme-menu-wrap {
   position: relative;
 }
@@ -161,6 +182,11 @@ textarea {
   border-radius: 0;
 }
 
+.shell.theme--doraemon .window {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -198,6 +224,10 @@ textarea {
 
 .shell.theme--dart .empty-state {
   border-radius: 10px;
+}
+
+.shell.theme--doraemon .empty-state {
+  border-radius: 18px;
 }
 
 .task-layout {
@@ -249,6 +279,10 @@ textarea {
   background: rgba(8, 19, 30, 0.6);
 }
 
+.shell.theme--doraemon .feedback textarea {
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .feedback textarea:focus {
   outline: 2px solid color-mix(in srgb, var(--accent) 32%, transparent);
   border-color: color-mix(in srgb, var(--accent) 58%, transparent);
@@ -281,8 +315,14 @@ textarea {
   color: #032335;
 }
 
+.shell.theme--doraemon .button--primary {
+  color: #fff9f3;
+  background: #0d87d8;
+  box-shadow: 0 8px 18px rgba(13, 135, 216, 0.22);
+}
+
 .button--ghost {
-  color: var(--danger);
+  color: #000;
   background: color-mix(in srgb, var(--danger) 14%, transparent);
 }
 
@@ -323,6 +363,13 @@ textarea {
 
 .shell.theme--dart .instruction-panel {
   background: color-mix(in srgb, var(--accent) 16%, rgba(14, 36, 55, 0.82));
+}
+
+.shell.theme--doraemon .instruction-panel {
+  background:
+    radial-gradient(circle at 50% -16%, rgba(255, 255, 255, 0.72), transparent 28%),
+    color-mix(in srgb, var(--accent) 14%, var(--panel-surface));
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
 }
 
 .sr-only {

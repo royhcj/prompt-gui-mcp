@@ -3,7 +3,7 @@
   import { createDesktopBridge } from "./lib/api";
   import type { HumanTaskState, SubmitTaskResult } from "./lib/types";
 
-  type ThemeId = "light" | "dart";
+  type ThemeId = "light" | "dart" | "doraemon";
 
   const bridge = createDesktopBridge();
   const THEME_STORAGE_KEY = "i-am-mcp.desktop.theme";
@@ -13,7 +13,7 @@
     queuedTasks: [],
     isConnected: false
   };
-  let theme: ThemeId = "light";
+  let theme: ThemeId = "doraemon";
   let isThemeMenuOpen = false;
   let themeMenuWrap: HTMLDivElement | null = null;
   let feedback = "";
@@ -22,7 +22,8 @@
 
   const themeOptions: Array<{ id: ThemeId; label: string }> = [
     { id: "light", label: "Light" },
-    { id: "dart", label: "Dart" }
+    { id: "dart", label: "Dart" },
+    { id: "doraemon", label: "Doraemon" }
   ];
 
   $: activeTask = state.activeTask;
@@ -34,7 +35,7 @@
 
   onMount(() => {
     const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (savedTheme === "light" || savedTheme === "dart") {
+    if (savedTheme === "light" || savedTheme === "dart" || savedTheme === "doraemon") {
       theme = savedTheme;
     }
 

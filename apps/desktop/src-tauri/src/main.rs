@@ -17,6 +17,8 @@ const SIDECAR_NAME: &str = "i-am-mcp-node";
 const MAIN_WINDOW_LABEL: &str = "main";
 const LIGHT_WINDOW_BACKGROUND: Color = Color(235, 223, 205, 255);
 const DART_WINDOW_BACKGROUND: Color = Color(16, 39, 58, 255);
+const DORAEMON_WINDOW_BACKGROUND: Color = Color(125, 215, 255, 255);
+const DEFAULT_WINDOW_BACKGROUND: Color = DORAEMON_WINDOW_BACKGROUND;
 
 struct BackendState {
     origin: String,
@@ -123,6 +125,7 @@ fn spawn_backend<R: Runtime>(app: &tauri::App<R>) -> Result<BackendState, String
 fn window_background_for_theme(theme: &str) -> Color {
     match theme {
         "dart" => DART_WINDOW_BACKGROUND,
+        "doraemon" => DORAEMON_WINDOW_BACKGROUND,
         _ => LIGHT_WINDOW_BACKGROUND,
     }
 }
@@ -140,7 +143,7 @@ fn main() {
 
             if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
                 #[cfg(target_os = "macos")]
-                let _ = window.set_background_color(Some(LIGHT_WINDOW_BACKGROUND));
+                let _ = window.set_background_color(Some(DEFAULT_WINDOW_BACKGROUND));
 
                 let app_handle = app.handle().clone();
                 window.on_window_event(move |event| {
