@@ -1,3 +1,14 @@
-node_modules
-dist
-.pnpm-store
+# Dependency caches
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+**/dist/
+**/target/
+apps/desktop/src-tauri/gen/
+
+# Local/editor noise
+.DS_Store
+*.log
+pnpm-debug.log*

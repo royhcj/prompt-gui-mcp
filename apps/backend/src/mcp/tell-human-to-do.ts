@@ -1,20 +1,15 @@
 import { z } from "zod";
 import { logger } from "../logger.js";
-
+import { taskQueue } from "../services/runtime.js";
 export const tellHumanToDoInputSchema = z.object({
   instruction: z.string().min(1, "instruction is required")
 });
 
 export type TellHumanToDoInput = z.infer<typeof tellHumanToDoInputSchema>;
 
-export type TellHumanToDoResult = {
-  status: "completed" | "failed";
-  feedback: string;
-};
-
 export async function handleTellHumanToDo(
   rawInput: unknown
-): Promise<TellHumanToDoResult> {
+): Promise<import("../types.js").TellHumanToDoResult> {
   const input = tellHumanToDoInputSchema.parse(rawInput);
 
   logger.info(
@@ -25,8 +20,5 @@ export async function handleTellHumanToDo(
     "MCP tool called"
   );
 
-  return {
-    status: "completed",
-    feedback: `Mock response: human received instruction \"${input.instruction}\"`
-  };
+  return taskQueue.enqueue(input.instruction);
 }

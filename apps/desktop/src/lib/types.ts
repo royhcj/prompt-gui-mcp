@@ -27,10 +27,6 @@ export type DesktopBridge = {
 
 declare global {
   interface Window {
-    __I_AM_MCP__?: {
-      subscribe(callback: (state: HumanTaskState) => void): () => void;
-      submitTaskResult(result: SubmitTaskResult): Promise<void>;
-      focusWindow?(): Promise<void>;
-    };
+    __I_AM_MCP__?: DesktopBridge;
   }
 }

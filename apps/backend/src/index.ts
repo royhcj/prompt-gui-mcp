@@ -5,8 +5,11 @@ import {
   handleTellHumanToDo,
   tellHumanToDoInputSchema
 } from "./mcp/tell-human-to-do.js";
+import { startControlServer } from "./transport/http.js";
 
 async function main(): Promise<void> {
+  await startControlServer();
+
   const server = new McpServer({
     name: "i-am-mcp-backend",
     version: "0.1.0"
