@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { createDesktopBridge } from "./lib/api";
   import type { HumanTaskState, SubmitTaskResult } from "./lib/types";
+  import Markdown from "./lib/Markdown.svelte";
 
   type ThemeId = "light" | "dart" | "doraemon";
 
@@ -124,7 +125,7 @@
     {#if activeTask}
       <section class="task-layout" aria-live="polite">
         <div class="instruction-panel">
-          <p class="instruction">{activeTask.instruction}</p>
+          <Markdown content={activeTask.instruction} />
         </div>
 
         <div class="task-layout__header">

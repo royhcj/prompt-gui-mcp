@@ -37,7 +37,7 @@ function createMcpServer(): McpServer {
     {
       title: "Tell Human To Do",
       description:
-        "Ask a human user to perform a real-world operation and return status + feedback.",
+        "Ask a human user to perform a real-world operation and return status + feedback. The instruction field supports markdown format including headers, lists, code blocks (with syntax highlighting), bold, italic, links, and more.",
       inputSchema: tellHumanToDoInputSchema.shape
     },
     async (args: { instruction: string }) => {
