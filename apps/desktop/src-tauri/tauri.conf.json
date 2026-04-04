@@ -17,10 +17,14 @@
       {
         "label": "main",
         "title": "i-am-mcp",
-        "width": 920,
-        "height": 760,
+        "width": 560,
+        "height": 700,
+        "minWidth": 480,
+        "minHeight": 620,
         "resizable": true,
-        "alwaysOnTop": true
+        "alwaysOnTop": true,
+        "transparent": true,
+        "titleBarStyle": "Transparent"
       }
     ]
   },

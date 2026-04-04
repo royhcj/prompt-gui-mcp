@@ -3,20 +3,32 @@
   import { createDesktopBridge } from "./lib/api";
   import type { HumanTaskState, SubmitTaskResult } from "./lib/types";
 
+  type ThemeId = "light" | "dart";
+
   const bridge = createDesktopBridge();
+  const THEME_STORAGE_KEY = "i-am-mcp.desktop.theme";
 
   let state: HumanTaskState = {
     activeTask: null,
     queuedTasks: [],
     isConnected: false
   };
+  let theme: ThemeId = "light";
+  let isThemeMenuOpen = false;
+  let themeMenuWrap: HTMLDivElement | null = null;
   let feedback = "";
   let submitError = "";
   let isSubmitting = false;
 
+  const themeOptions: Array<{ id: ThemeId; label: string }> = [
+    { id: "light", label: "Light" },
+    { id: "dart", label: "Dart" }
+  ];
+
   $: activeTask = state.activeTask;
   $: queuedTasks = state.queuedTasks;
   $: queueCount = queuedTasks.length;
+  $: themeLabel = themeOptions.find((option) => option.id === theme)?.label ?? "Theme";
   $: shortcutLabel = navigator.platform.includes("Mac") ? "Cmd" : "Ctrl";
 
   $: if (!activeTask) {
@@ -24,14 +36,46 @@
   }
 
   onMount(() => {
+    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedTheme === "light" || savedTheme === "dart") {
+      theme = savedTheme;
+    }
+
     const unsubscribe = bridge.subscribe((nextState) => {
       state = nextState;
     });
 
+    function onWindowClick(event: MouseEvent): void {
+      if (!themeMenuWrap) {
+        isThemeMenuOpen = false;
+        return;
+      }
+
+      const target = event.target;
+      if (!(target instanceof Node) || !themeMenuWrap.contains(target)) {
+        isThemeMenuOpen = false;
+      }
+    }
+
+    window.addEventListener("click", onWindowClick);
     void bridge.focusWindow();
 
-    return unsubscribe;
+    return () => {
+      window.removeEventListener("click", onWindowClick);
+      unsubscribe();
+    };
   });
+
+  function toggleThemeMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    isThemeMenuOpen = !isThemeMenuOpen;
+  }
+
+  function applyTheme(nextTheme: ThemeId): void {
+    theme = nextTheme;
+    isThemeMenuOpen = false;
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  }
 
   async function submit(status: SubmitTaskResult["status"]): Promise<void> {
     if (!activeTask || isSubmitting) {
@@ -83,14 +127,46 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<main class="shell">
-  <section class="window">
-    <div class="window__glow" aria-hidden="true"></div>
+<main class={`shell theme--${theme}`}>
+  <div class="title-strip" data-tauri-drag-region>
+    <div class="title-strip__brand">
+      <span class="eyebrow">i-am-mcp</span>
+      <span class="title-strip__title">Human Assist Console</span>
+    </div>
+    <div class="theme-menu-wrap" bind:this={themeMenuWrap}>
+      <button
+        class="menu-button"
+        type="button"
+        on:click={toggleThemeMenu}
+        aria-expanded={isThemeMenuOpen}
+        aria-haspopup="menu"
+        aria-label="Choose theme"
+      >
+        Theme: {themeLabel}
+      </button>
+      {#if isThemeMenuOpen}
+        <div class="theme-menu" role="menu">
+          {#each themeOptions as option}
+            <button
+              class="theme-menu__item"
+              class:is-active={option.id === theme}
+              type="button"
+              role="menuitemradio"
+              aria-checked={option.id === theme}
+              on:click={() => applyTheme(option.id)}
+            >
+              {option.label}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </div>
 
+  <section class="window">
     <header class="window__header">
       <div>
-        <p class="eyebrow">i-am-mcp</p>
-        <h1>Human Assist Console</h1>
+        <h1>{#if activeTask}Active task{:else}Waiting for tasks{/if}</h1>
       </div>
 
       <div
@@ -155,7 +231,7 @@
       <section class="empty-state" aria-live="polite">
         <p class="empty-state__title">No active human task</p>
         <p class="empty-state__body">
-          The window stays ready for the next MCP request. New tasks will appear here immediately.
+          The app is ready for the next MCP request.
         </p>
       </section>
     {/if}
