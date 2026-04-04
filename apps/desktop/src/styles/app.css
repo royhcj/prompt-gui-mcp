@@ -35,11 +35,11 @@ textarea {
 
 .shell {
   height: 100%;
-  padding: 12px 12px 10px;
+  padding: 0 10px 10px;
   display: grid;
-  gap: 10px;
-  --title-height: 34px;
-  --shell-background:
+  gap: 8px;
+  --title-height: 36px;
+  --window-background:
     radial-gradient(circle at 18% -5%, rgba(255, 213, 151, 0.56), transparent 38%),
     linear-gradient(160deg, #f4ecdd 0%, #eddcc5 55%, #dbc4aa 100%);
   --window-surface: rgba(255, 250, 242, 0.87);
@@ -53,13 +53,13 @@ textarea {
   --accent-strong: #8f3910;
   --danger: #a3362d;
   --success: #1d6748;
-  background: var(--shell-background);
+  background: transparent;
   color: var(--text);
 }
 
 .shell.theme--dart {
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
-  --shell-background:
+  --window-background:
     radial-gradient(circle at 95% 12%, rgba(99, 204, 255, 0.17), transparent 36%),
     radial-gradient(circle at -5% 88%, rgba(7, 142, 222, 0.28), transparent 48%),
     linear-gradient(170deg, #0f2637 0%, #0c1f30 38%, #0c1824 100%);
@@ -76,30 +76,9 @@ textarea {
   --success: #53dcab;
 }
 
-.title-strip {
+.native-titlebar {
   height: var(--title-height);
-  border-radius: 12px;
-  padding: 0 6px 0 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.title-strip__brand {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
-.title-strip__title {
-  font-size: 0.84rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  background: transparent;
 }
 
 .theme-menu-wrap {
@@ -154,7 +133,10 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%), var(--window-surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%),
+    var(--window-background),
+    var(--window-surface);
   box-shadow: var(--shadow);
   overflow: hidden;
 }
@@ -175,6 +157,12 @@ textarea {
 
 .window__header {
   padding-bottom: 2px;
+}
+
+.header-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .window__header h1,
@@ -386,15 +374,7 @@ textarea {
 
 @media (max-width: 520px) {
   .shell {
-    padding: 10px 10px 8px;
-  }
-
-  .title-strip {
-    padding-left: 62px;
-  }
-
-  .title-strip__title {
-    display: none;
+    padding: 0 8px 8px;
   }
 
   .window__header,

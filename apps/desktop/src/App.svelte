@@ -128,57 +128,56 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <main class={`shell theme--${theme}`}>
-  <div class="title-strip" data-tauri-drag-region>
-    <div class="title-strip__brand">
-      <span class="eyebrow">i-am-mcp</span>
-      <span class="title-strip__title">Human Assist Console</span>
-    </div>
-    <div class="theme-menu-wrap" bind:this={themeMenuWrap}>
-      <button
-        class="menu-button"
-        type="button"
-        on:click={toggleThemeMenu}
-        aria-expanded={isThemeMenuOpen}
-        aria-haspopup="menu"
-        aria-label="Choose theme"
-      >
-        Theme: {themeLabel}
-      </button>
-      {#if isThemeMenuOpen}
-        <div class="theme-menu" role="menu">
-          {#each themeOptions as option}
-            <button
-              class="theme-menu__item"
-              class:is-active={option.id === theme}
-              type="button"
-              role="menuitemradio"
-              aria-checked={option.id === theme}
-              on:click={() => applyTheme(option.id)}
-            >
-              {option.label}
-            </button>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  </div>
+  <div class="native-titlebar" data-tauri-drag-region aria-hidden="true"></div>
 
   <section class="window">
     <header class="window__header">
       <div>
+        <p class="eyebrow">i-am-mcp</p>
         <h1>{#if activeTask}Active task{:else}Waiting for tasks{/if}</h1>
       </div>
 
-      <div
-        class:is-live={state.isConnected}
-        class="status-pill"
-        aria-live="polite"
-      >
-        {#if state.isConnected}
-          Connected
-        {:else}
-          Demo mode
-        {/if}
+      <div class="header-right">
+        <div
+          class:is-live={state.isConnected}
+          class="status-pill"
+          aria-live="polite"
+        >
+          {#if state.isConnected}
+            Connected
+          {:else}
+            Demo mode
+          {/if}
+        </div>
+
+        <div class="theme-menu-wrap" bind:this={themeMenuWrap}>
+          <button
+            class="menu-button"
+            type="button"
+            on:click={toggleThemeMenu}
+            aria-expanded={isThemeMenuOpen}
+            aria-haspopup="menu"
+            aria-label="Choose theme"
+          >
+            Theme: {themeLabel}
+          </button>
+          {#if isThemeMenuOpen}
+            <div class="theme-menu" role="menu">
+              {#each themeOptions as option}
+                <button
+                  class="theme-menu__item"
+                  class:is-active={option.id === theme}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={option.id === theme}
+                  on:click={() => applyTheme(option.id)}
+                >
+                  {option.label}
+                </button>
+              {/each}
+            </div>
+          {/if}
+        </div>
       </div>
     </header>
 
