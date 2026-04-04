@@ -1,21 +1,97 @@
 import { spawn } from "node:child_process";
+import {
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import net from "node:net";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("../", import.meta.url);
-const desktopDevUrl = "http://127.0.0.1:4173";
+const root = fileURLToPath(new URL("../", import.meta.url));
+const desktopWorkspace = fileURLToPath(new URL("../apps/desktop/", import.meta.url));
+const backendWorkspace = fileURLToPath(new URL("../apps/backend/", import.meta.url));
+
+async function readTauriConfig() {
+  const configPath = fileURLToPath(
+    new URL("../apps/desktop/src-tauri/tauri.conf.json", import.meta.url)
+  );
+  const raw = await readFile(configPath, "utf8");
+  return JSON.parse(raw);
+}
+
+async function reservePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        server.close(() => {
+          reject(new Error("Failed to reserve a localhost port."));
+        });
+        return;
+      }
+
+      const { port } = address;
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(port);
+      });
+    });
+  });
+}
+
+async function createTempTauriConfig(devPort) {
+  const config = await readTauriConfig();
+  const tempDir = await mkdtemp(join(tmpdir(), "i-am-mcp-simulate-"));
+  const configPath = join(tempDir, "tauri.simulate.conf.json");
+  const devUrl = `http://127.0.0.1:${devPort}`;
+
+  config.build = {
+    ...(config.build ?? {}),
+    devUrl,
+    beforeDevCommand: `pnpm exec vite --host 127.0.0.1 --port ${devPort} --strictPort`
+  };
+
+  await writeFile(configPath, JSON.stringify(config, null, 2), "utf8");
+
+  return {
+    configPath,
+    devUrl,
+    cleanup: () => rm(tempDir, { recursive: true, force: true })
+  };
+}
 
 function run(command, args, options = {}) {
   return spawn(command, args, {
-    cwd: root,
+    cwd: options.cwd ?? root,
     stdio: "inherit",
     shell: false,
     ...options
   });
 }
 
-async function waitForDesktop(timeoutMs) {
+async function waitForDesktop(desktop, desktopDevUrl, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
+  let desktopExited = false;
+
+  desktop.once("exit", () => {
+    desktopExited = true;
+  });
 
   while (Date.now() < deadline) {
+    if (desktopExited || desktop.exitCode !== null) {
+      throw new Error("Desktop process exited before the dev server became ready.");
+    }
+
     try {
       const response = await fetch(desktopDevUrl);
       if (response.ok) {
@@ -32,7 +108,23 @@ async function waitForDesktop(timeoutMs) {
 }
 
 async function main() {
-  const desktop = run("pnpm", ["--filter", "desktop", "tauri:dev"]);
+  const [desktopPort, controlPort] = await Promise.all([
+    reservePort(),
+    reservePort()
+  ]);
+  const backendOrigin = `http://127.0.0.1:${controlPort}`;
+  const tempConfig = await createTempTauriConfig(desktopPort);
+  const desktop = run(
+    "pnpm",
+    ["exec", "tauri", "dev", "--config", tempConfig.configPath],
+    {
+      cwd: desktopWorkspace,
+      env: {
+        ...process.env,
+        VITE_I_AM_MCP_BACKEND_ORIGIN: backendOrigin
+      }
+    }
+  );
 
   let isCleaningUp = false;
 
@@ -43,6 +135,7 @@ async function main() {
 
     isCleaningUp = true;
     desktop.kill("SIGTERM");
+    void tempConfig.cleanup();
   };
 
   process.on("SIGINT", () => {
@@ -55,9 +148,15 @@ async function main() {
     process.exit(143);
   });
 
-  await waitForDesktop(60_000);
+  await waitForDesktop(desktop, tempConfig.devUrl, 60_000);
 
-  const simulate = run("pnpm", ["--filter", "backend", "simulate"]);
+  const simulate = run("pnpm", ["simulate"], {
+    cwd: backendWorkspace,
+    env: {
+      ...process.env,
+      I_AM_MCP_CONTROL_PORT: String(controlPort)
+    }
+  });
 
   simulate.on("exit", (code) => {
     cleanup();

@@ -7,8 +7,25 @@ import {
 } from "./mcp/tell-human-to-do.js";
 import { startControlServer } from "./transport/http.js";
 
+function resolveControlPort(): number {
+  const rawPort = process.env.I_AM_MCP_CONTROL_PORT;
+
+  if (!rawPort) {
+    return 43118;
+  }
+
+  const parsedPort = Number(rawPort);
+  const isValidPort = Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65535;
+
+  if (!isValidPort) {
+    throw new Error(`Invalid I_AM_MCP_CONTROL_PORT: ${rawPort}`);
+  }
+
+  return parsedPort;
+}
+
 async function main(): Promise<void> {
-  await startControlServer();
+  await startControlServer(resolveControlPort());
 
   const server = new McpServer({
     name: "i-am-mcp-backend",

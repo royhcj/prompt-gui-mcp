@@ -1,10 +1,30 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
+function inheritedEnv(): Record<string, string> {
+  const env: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === "string") {
+      env[key] = value;
+    }
+  }
+
+  return env;
+}
+
 async function main(): Promise<void> {
+  const controlPort = process.env.I_AM_MCP_CONTROL_PORT;
+  const env = inheritedEnv();
+
+  if (controlPort) {
+    env.I_AM_MCP_CONTROL_PORT = controlPort;
+  }
+
   const transport = new StdioClientTransport({
     command: "node",
-    args: ["dist/src/index.js"]
+    args: ["dist/src/index.js"],
+    env
   });
 
   const client = new Client({
