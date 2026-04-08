@@ -1,6 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { logger } from "./logger.js";
 import {
+  handlePromptForm,
+  promptFormInputSchema,
+  type PromptFormInput
+} from "./mcp/prompt-form.js";
+import {
   handleTellHumanToDo,
   tellHumanToDoInputSchema
 } from "./mcp/tell-human-to-do.js";
@@ -42,6 +47,29 @@ function createMcpServer(): McpServer {
     },
     async (args: { instruction: string }) => {
       const result = await handleTellHumanToDo(args);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result)
+          }
+        ],
+        structuredContent: result
+      };
+    }
+  );
+
+  server.registerTool(
+    "prompt-form",
+    {
+      title: "Prompt Form",
+      description:
+        "Show a structured form in the desktop app and return structured user input plus free-form feedback.",
+      inputSchema: promptFormInputSchema.shape
+    },
+    async (args: PromptFormInput) => {
+      const result = await handlePromptForm(args);
 
       return {
         content: [

@@ -35,12 +35,49 @@ async function main(): Promise<void> {
   const tools = await client.listTools();
   console.log("Registered tools:", tools.tools.map((tool) => tool.name));
 
-  const response = await client.callTool({
-    name: "tell-human-to-do",
-    arguments: {
-      instruction: "Please check inbox and provide OTP"
-    }
-  });
+  const toolName = process.argv[2] === "prompt-form" ? "prompt-form" : "tell-human-to-do";
+  const response = await client.callTool(
+    toolName === "prompt-form"
+      ? {
+          name: toolName,
+          arguments: {
+            title: "Choose deployment target",
+            description: "Review the release and submit the form.",
+            form: {
+              version: "1",
+              fields: [
+                {
+                  type: "markdown",
+                  id: "release_notes",
+                  content: "## Release\n\n- Commit: `a1b2c3d`\n- Branch: `main`"
+                },
+                {
+                  type: "radio",
+                  id: "environment",
+                  label: "Environment",
+                  required: true,
+                  options: [
+                    { label: "Staging", value: "staging" },
+                    { label: "Production", value: "production" }
+                  ]
+                },
+                {
+                  type: "text",
+                  id: "ticket",
+                  label: "Change ticket",
+                  placeholder: "CHG-1234"
+                }
+              ]
+            }
+          }
+        }
+      : {
+          name: toolName,
+          arguments: {
+            instruction: "Please check inbox and provide OTP"
+          }
+        }
+  );
 
   console.log("Tool call response:");
   console.log(JSON.stringify(response.structuredContent, null, 2));
