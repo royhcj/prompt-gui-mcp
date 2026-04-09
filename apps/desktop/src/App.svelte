@@ -23,7 +23,7 @@
   };
   let activeTask: HumanTaskState["activeTask"] = null;
   let lastTaskId: string | null = null;
-  let theme: ThemeId = "doraemon";
+  let theme: ThemeId = "dart";
   let isThemeMenuOpen = false;
   let themeMenuWrap: HTMLDivElement | null = null;
   let feedback = "";
@@ -581,7 +581,7 @@
                       {/if}
                       <div class="option-list">
                         {#each field.options as option}
-                          <label class="option-card">
+                          <label class="option-card option-card--radio">
                             <input
                               type="radio"
                               name={field.id}

@@ -446,6 +446,12 @@ textarea {
   background: color-mix(in srgb, var(--window-surface) 82%, transparent);
 }
 
+.option-card--radio {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: flex-start;
+}
+
 .option-card__main {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -454,7 +460,8 @@ textarea {
   cursor: pointer;
 }
 
-.option-card__main input[type="checkbox"] {
+.option-card__main input[type="checkbox"],
+.option-card--radio input[type="radio"] {
   width: 12px;
   height: 12px;
   margin: 2px 0 0;
