@@ -28,6 +28,7 @@
   let themeMenuWrap: HTMLDivElement | null = null;
   let feedback = "";
   let formValues: FormValues = {};
+  let checkboxDetailValues: Record<string, string | null> = {};
   let fieldErrors: FieldErrors = {};
   let submitError = "";
   let isSubmitting = false;
@@ -58,6 +59,8 @@
     fieldErrors = {};
     formValues =
       activeTask?.kind === "prompt-form" ? createInitialFormValues(activeTask) : {};
+    checkboxDetailValues =
+      activeTask?.kind === "prompt-form" ? createInitialCheckboxDetailValues(activeTask) : {};
 
     if (activeTask) {
       void bridge.focusWindow();
@@ -107,11 +110,37 @@
       }
 
       if (field.type === "checkbox-list") {
-        values[field.id] = field.defaultValue ? [...field.defaultValue] : null;
+        values[field.id] = field.defaultValue ? [...field.defaultValue] : [];
         continue;
       }
 
       values[field.id] = field.defaultValue ?? null;
+    }
+
+    return values;
+  }
+
+  function checkboxDetailKey(fieldId: string, optionValue: string): string {
+    return `${fieldId}::${optionValue}`;
+  }
+
+  function createInitialCheckboxDetailValues(task: PromptFormTask): Record<string, string | null> {
+    const values: Record<string, string | null> = {};
+
+    for (const field of task.form.fields) {
+      if (field.type !== "checkbox-list" || !field.defaultValue) {
+        continue;
+      }
+
+      const selected = new Set(field.defaultValue);
+      for (const option of field.options) {
+        if (!option.textInput || !selected.has(option.value)) {
+          continue;
+        }
+
+        values[checkboxDetailKey(field.id, option.value)] =
+          option.textInput.defaultValue ?? null;
+      }
     }
 
     return values;
@@ -124,7 +153,32 @@
 
   function getMultiValue(fieldId: string): string[] {
     const value = formValues[fieldId];
-    return Array.isArray(value) ? value : [];
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (value && typeof value === "object" && "selected" in value) {
+      return Array.isArray(value.selected) ? value.selected : [];
+    }
+
+    return [];
+  }
+
+  function getCheckboxDetailValue(fieldId: string, optionValue: string): string {
+    return checkboxDetailValues[checkboxDetailKey(fieldId, optionValue)] ?? "";
+  }
+
+  function setCheckboxDetailValue(fieldId: string, optionValue: string, value: string): void {
+    checkboxDetailValues = {
+      ...checkboxDetailValues,
+      [checkboxDetailKey(fieldId, optionValue)]: value
+    };
+
+    if (fieldErrors[fieldId]) {
+      const nextErrors = { ...fieldErrors };
+      delete nextErrors[fieldId];
+      fieldErrors = nextErrors;
+    }
   }
 
   function setFieldValue(fieldId: string, value: PromptFormValue): void {
@@ -140,15 +194,25 @@
     }
   }
 
-  function toggleCheckboxValue(fieldId: string, optionValue: string, checked: boolean): void {
-    const values = getMultiValue(fieldId);
-    const nextValues = checked
-      ? values.includes(optionValue)
-        ? values
-        : [...values, optionValue]
-      : values.filter((value) => value !== optionValue);
+  function handleCheckboxListChange(fieldId: string, optionValue: string): void {
+    const selected = [...getMultiValue(fieldId)];
 
-    setFieldValue(fieldId, nextValues.length > 0 ? nextValues : null);
+    setFieldValue(fieldId, selected);
+
+    if (!selected.includes(optionValue)) {
+      const key = checkboxDetailKey(fieldId, optionValue);
+      if (key in checkboxDetailValues) {
+        const nextDetails = { ...checkboxDetailValues };
+        delete nextDetails[key];
+        checkboxDetailValues = nextDetails;
+      }
+    }
+
+    if (fieldErrors[fieldId]) {
+      const nextErrors = { ...fieldErrors };
+      delete nextErrors[fieldId];
+      fieldErrors = nextErrors;
+    }
   }
 
   function normalizeFieldValue(value: PromptFormValue): PromptFormValue {
@@ -170,17 +234,40 @@
     const nextErrors: FieldErrors = {};
 
     for (const field of task.form.fields) {
-      if (field.type === "markdown" || !field.required || field.disabled) {
+      if (field.type === "markdown" || field.disabled) {
         continue;
       }
 
       const normalizedValue = normalizeFieldValue(formValues[field.id] ?? null);
-      if (
-        normalizedValue === null ||
-        (typeof normalizedValue === "string" && normalizedValue.trim() === "") ||
-        (Array.isArray(normalizedValue) && normalizedValue.length === 0)
-      ) {
-        nextErrors[field.id] = `${field.label} is required.`;
+      if (field.required) {
+        if (
+          normalizedValue === null ||
+          (typeof normalizedValue === "string" && normalizedValue.trim() === "") ||
+          (Array.isArray(normalizedValue) && normalizedValue.length === 0)
+        ) {
+          nextErrors[field.id] = `${field.label} is required.`;
+          continue;
+        }
+      }
+
+      if (field.type === "checkbox-list") {
+        const selected = getMultiValue(field.id);
+        for (const option of field.options) {
+          if (!option.textInput || !selected.includes(option.value)) {
+            continue;
+          }
+
+          const isTextRequired = option.textInput.required ?? true;
+          if (!isTextRequired) {
+            continue;
+          }
+
+          const detail = getCheckboxDetailValue(field.id, option.value).trim();
+          if (detail.length === 0) {
+            nextErrors[field.id] = `${field.label}: ${option.label} requires details.`;
+            break;
+          }
+        }
       }
     }
 
@@ -195,6 +282,33 @@
 
     for (const field of task.form.fields) {
       if (field.type === "markdown") {
+        continue;
+      }
+
+      if (field.type === "checkbox-list") {
+        if (cancelled) {
+          values[field.id] = null;
+          continue;
+        }
+
+        const selected = getMultiValue(field.id);
+        if (selected.length === 0) {
+          values[field.id] = null;
+          continue;
+        }
+
+        const details: Record<string, string | null> = {};
+        for (const option of field.options) {
+          if (!option.textInput || !selected.includes(option.value)) {
+            continue;
+          }
+
+          const detail = getCheckboxDetailValue(field.id, option.value).trim();
+          details[option.value] = detail.length > 0 ? detail : null;
+        }
+
+        values[field.id] =
+          Object.keys(details).length > 0 ? { selected, details } : selected;
         continue;
       }
 
@@ -540,26 +654,40 @@
                       {/if}
                       <div class="option-list">
                         {#each field.options as option}
-                          <label class="option-card">
-                            <input
-                              type="checkbox"
-                              value={option.value}
-                              checked={getMultiValue(field.id).includes(option.value)}
-                              disabled={field.disabled}
-                              on:change={(event) =>
-                                toggleCheckboxValue(
-                                  field.id,
-                                  option.value,
-                                  (event.currentTarget as HTMLInputElement).checked
-                                )}
-                            />
-                            <span class="option-card__body">
-                              <span class="option-card__label">{option.label}</span>
-                              {#if option.description}
-                                <span class="option-card__description">{option.description}</span>
-                              {/if}
-                            </span>
-                          </label>
+                          <div class="option-card">
+                            <label class="option-card__main">
+                              <input
+                                type="checkbox"
+                                value={option.value}
+                                bind:group={formValues[field.id]}
+                                disabled={field.disabled}
+                                on:change={() =>
+                                  handleCheckboxListChange(field.id, option.value)
+                                }
+                              />
+                              <span class="option-card__body">
+                                <span class="option-card__label">{option.label}</span>
+                                {#if option.description}
+                                  <span class="option-card__description">{option.description}</span>
+                                {/if}
+                              </span>
+                            </label>
+                            {#if option.textInput && getMultiValue(field.id).includes(option.value)}
+                              <input
+                                class="option-card__detail-input"
+                                type="text"
+                                value={getCheckboxDetailValue(field.id, option.value)}
+                                placeholder={option.textInput.placeholder ?? "Please specify"}
+                                disabled={field.disabled}
+                                on:input={(event) =>
+                                  setCheckboxDetailValue(
+                                    field.id,
+                                    option.value,
+                                    (event.currentTarget as HTMLInputElement).value
+                                  )}
+                              />
+                            {/if}
+                          </div>
                         {/each}
                       </div>
                       {#if fieldErrors[field.id]}

@@ -6,6 +6,14 @@ export type PromptFormOption = {
   description?: string;
 };
 
+export type PromptFormCheckboxOption = PromptFormOption & {
+  textInput?: {
+    placeholder?: string;
+    defaultValue?: string;
+    required?: boolean;
+  };
+};
+
 export type PromptFormFieldBase = {
   id: string;
   helpText?: string;
@@ -49,10 +57,17 @@ export type PromptFormField =
       type: "checkbox-list";
       label: string;
       defaultValue?: string[];
-      options: PromptFormOption[];
+      options: PromptFormCheckboxOption[];
     });
 
-export type PromptFormValue = string | string[] | null;
+export type PromptFormValue =
+  | string
+  | string[]
+  | {
+      selected: string[];
+      details?: Record<string, string | null>;
+    }
+  | null;
 
 export type PromptFormDefinition = {
   version: "1";

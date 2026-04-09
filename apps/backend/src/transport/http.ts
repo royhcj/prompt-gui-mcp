@@ -20,7 +20,17 @@ const promptFormSubmitSchema = z.object({
   feedback: z.string().optional().default(""),
   values: z.record(
     z.string(),
-    z.union([z.string(), z.array(z.string()), z.null()])
+    z.union([
+      z.string(),
+      z.array(z.string()),
+      z
+        .object({
+          selected: z.array(z.string()),
+          details: z.record(z.string(), z.string().nullable()).optional()
+        })
+        .strict(),
+      z.null()
+    ])
   )
 });
 

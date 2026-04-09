@@ -439,14 +439,27 @@ textarea {
 
 .option-card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  align-items: flex-start;
+  gap: 8px;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: color-mix(in srgb, var(--window-surface) 82%, transparent);
+}
+
+.option-card__main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: flex-start;
   cursor: pointer;
+}
+
+.option-card__main input[type="checkbox"] {
+  width: 12px;
+  height: 12px;
+  margin: 2px 0 0;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
 }
 
 .option-card__body {
@@ -461,6 +474,10 @@ textarea {
 .option-card__description {
   color: var(--text-muted);
   font-size: 0.8rem;
+}
+
+.option-card__detail-input {
+  margin-top: 2px;
 }
 
 .option-card:has(input:checked) {

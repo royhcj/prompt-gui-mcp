@@ -11,6 +11,16 @@ const promptFormOptionSchema = z.object({
   description: z.string().trim().min(1).optional()
 });
 
+const checkboxOptionTextInputSchema = z.object({
+  placeholder: z.string().optional(),
+  defaultValue: z.string().optional(),
+  required: z.boolean().optional()
+});
+
+const promptFormCheckboxOptionSchema = promptFormOptionSchema.extend({
+  textInput: checkboxOptionTextInputSchema.optional()
+});
+
 const fieldBaseSchema = {
   id: nonEmptyString,
   helpText: z.string().trim().min(1).optional(),
@@ -63,7 +73,7 @@ const checkboxListFieldSchema = z.object({
   ...fieldBaseSchema,
   label: nonEmptyString,
   defaultValue: z.array(z.string()).optional(),
-  options: z.array(promptFormOptionSchema).min(1, "options must not be empty")
+  options: z.array(promptFormCheckboxOptionSchema).min(1, "options must not be empty")
 });
 
 const promptFormFieldSchema = z.discriminatedUnion("type", [
