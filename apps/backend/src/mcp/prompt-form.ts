@@ -58,12 +58,21 @@ const selectFieldSchema = z.object({
   options: z.array(promptFormOptionSchema).min(1, "options must not be empty")
 });
 
+const checkboxListFieldSchema = z.object({
+  type: z.literal("checkbox-list"),
+  ...fieldBaseSchema,
+  label: nonEmptyString,
+  defaultValue: z.array(z.string()).optional(),
+  options: z.array(promptFormOptionSchema).min(1, "options must not be empty")
+});
+
 const promptFormFieldSchema = z.discriminatedUnion("type", [
   markdownFieldSchema,
   textFieldSchema,
   textareaFieldSchema,
   radioFieldSchema,
-  selectFieldSchema
+  selectFieldSchema,
+  checkboxListFieldSchema
 ]);
 
 const promptFormDefinitionSchema = z
@@ -85,7 +94,11 @@ const promptFormDefinitionSchema = z
 
       fieldIds.add(field.id);
 
-      if (field.type === "radio" || field.type === "select") {
+      if (
+        field.type === "radio" ||
+        field.type === "select" ||
+        field.type === "checkbox-list"
+      ) {
         const optionValues = new Set<string>();
 
         for (const [optionIndex, option] of field.options.entries()) {
@@ -100,12 +113,40 @@ const promptFormDefinitionSchema = z
           optionValues.add(option.value);
         }
 
-        if (field.defaultValue && !optionValues.has(field.defaultValue)) {
+        if (
+          (field.type === "radio" || field.type === "select") &&
+          field.defaultValue &&
+          !optionValues.has(field.defaultValue)
+        ) {
           context.addIssue({
             code: z.ZodIssueCode.custom,
             message: `defaultValue must match an option value for field '${field.id}'`,
             path: ["fields", index, "defaultValue"]
           });
+        }
+
+        if (field.type === "checkbox-list" && field.defaultValue) {
+          const selectedValues = new Set<string>();
+
+          for (const [valueIndex, value] of field.defaultValue.entries()) {
+            if (selectedValues.has(value)) {
+              context.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `defaultValue must not include duplicate values for field '${field.id}'`,
+                path: ["fields", index, "defaultValue", valueIndex]
+              });
+            }
+
+            selectedValues.add(value);
+
+            if (!optionValues.has(value)) {
+              context.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `defaultValue must match option values for field '${field.id}'`,
+                path: ["fields", index, "defaultValue", valueIndex]
+              });
+            }
+          }
         }
       }
     }

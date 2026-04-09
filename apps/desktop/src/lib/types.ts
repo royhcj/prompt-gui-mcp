@@ -44,7 +44,15 @@ export type PromptFormField =
       defaultValue?: string;
       placeholder?: string;
       options: PromptFormOption[];
+    })
+  | (PromptFormFieldBase & {
+      type: "checkbox-list";
+      label: string;
+      defaultValue?: string[];
+      options: PromptFormOption[];
     });
+
+export type PromptFormValue = string | string[] | null;
 
 export type PromptFormDefinition = {
   version: "1";
@@ -91,7 +99,7 @@ export type SubmitPromptFormResult = {
   kind: "prompt-form";
   status: "submitted" | "cancelled";
   feedback: string;
-  values: Record<string, string | null>;
+  values: Record<string, PromptFormValue>;
 };
 
 export type SubmitTaskResult =

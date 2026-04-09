@@ -44,6 +44,12 @@ export type PromptFormField =
       defaultValue?: string;
       placeholder?: string;
       options: PromptFormOption[];
+    })
+  | (PromptFormFieldBase & {
+      type: "checkbox-list";
+      label: string;
+      defaultValue?: string[];
+      options: PromptFormOption[];
     });
 
 export type PromptFormDefinition = {
@@ -84,7 +90,7 @@ export type TellHumanToDoResult = {
   feedback: string;
 };
 
-export type PromptFormValue = string | null;
+export type PromptFormValue = string | string[] | null;
 
 export type PromptFormResult = {
   status: "submitted" | "cancelled";

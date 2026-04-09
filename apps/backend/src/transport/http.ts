@@ -18,7 +18,10 @@ const promptFormSubmitSchema = z.object({
   kind: z.literal("prompt-form"),
   status: z.enum(["submitted", "cancelled"]),
   feedback: z.string().optional().default(""),
-  values: z.record(z.string(), z.string().nullable())
+  values: z.record(
+    z.string(),
+    z.union([z.string(), z.array(z.string()), z.null()])
+  )
 });
 
 const legacyTellHumanToDoSubmitSchema = z.object({

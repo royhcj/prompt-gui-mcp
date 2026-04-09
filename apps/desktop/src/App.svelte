@@ -3,13 +3,14 @@
   import { createDesktopBridge } from "./lib/api";
   import type {
     HumanTaskState,
+    PromptFormValue,
     PromptFormTask,
     SubmitTaskResult
   } from "./lib/types";
   import Markdown from "./lib/Markdown.svelte";
 
   type ThemeId = "light" | "dart" | "doraemon";
-  type FormValues = Record<string, string | null>;
+  type FormValues = Record<string, PromptFormValue>;
   type FieldErrors = Record<string, string>;
 
   const bridge = createDesktopBridge();
@@ -105,6 +106,11 @@
         continue;
       }
 
+      if (field.type === "checkbox-list") {
+        values[field.id] = field.defaultValue ? [...field.defaultValue] : null;
+        continue;
+      }
+
       values[field.id] = field.defaultValue ?? null;
     }
 
@@ -112,10 +118,16 @@
   }
 
   function getValue(fieldId: string): string {
-    return formValues[fieldId] ?? "";
+    const value = formValues[fieldId];
+    return typeof value === "string" ? value : "";
   }
 
-  function setFieldValue(fieldId: string, value: string | null): void {
+  function getMultiValue(fieldId: string): string[] {
+    const value = formValues[fieldId];
+    return Array.isArray(value) ? value : [];
+  }
+
+  function setFieldValue(fieldId: string, value: PromptFormValue): void {
     formValues = {
       ...formValues,
       [fieldId]: value
@@ -128,9 +140,27 @@
     }
   }
 
-  function normalizeFieldValue(value: string | null): string | null {
+  function toggleCheckboxValue(fieldId: string, optionValue: string, checked: boolean): void {
+    const values = getMultiValue(fieldId);
+    const nextValues = checked
+      ? values.includes(optionValue)
+        ? values
+        : [...values, optionValue]
+      : values.filter((value) => value !== optionValue);
+
+    setFieldValue(fieldId, nextValues.length > 0 ? nextValues : null);
+  }
+
+  function normalizeFieldValue(value: PromptFormValue): PromptFormValue {
     if (value === null) {
       return null;
+    }
+
+    if (Array.isArray(value)) {
+      const normalizedValues = value
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+      return normalizedValues.length > 0 ? normalizedValues : null;
     }
 
     return value === "" ? null : value;
@@ -145,7 +175,11 @@
       }
 
       const normalizedValue = normalizeFieldValue(formValues[field.id] ?? null);
-      if (normalizedValue === null || normalizedValue.trim() === "") {
+      if (
+        normalizedValue === null ||
+        (typeof normalizedValue === "string" && normalizedValue.trim() === "") ||
+        (Array.isArray(normalizedValue) && normalizedValue.length === 0)
+      ) {
         nextErrors[field.id] = `${field.label} is required.`;
       }
     }
@@ -488,6 +522,50 @@
                         <span class="field-error" id={`${field.id}-error`}>{fieldErrors[field.id]}</span>
                       {/if}
                     </label>
+                  {:else if field.type === "checkbox-list"}
+                    <fieldset
+                      class="field-card fieldset-card"
+                      class:error={Boolean(fieldErrors[field.id])}
+                      disabled={field.disabled}
+                      aria-describedby={fieldErrors[field.id] ? `${field.id}-error` : undefined}
+                    >
+                      <legend class="field-label">
+                        {field.label}
+                        {#if field.required}
+                          <span class="field-required" aria-hidden="true">*</span>
+                        {/if}
+                      </legend>
+                      {#if field.helpText}
+                        <p class="field-help">{field.helpText}</p>
+                      {/if}
+                      <div class="option-list">
+                        {#each field.options as option}
+                          <label class="option-card">
+                            <input
+                              type="checkbox"
+                              value={option.value}
+                              checked={getMultiValue(field.id).includes(option.value)}
+                              disabled={field.disabled}
+                              on:change={(event) =>
+                                toggleCheckboxValue(
+                                  field.id,
+                                  option.value,
+                                  (event.currentTarget as HTMLInputElement).checked
+                                )}
+                            />
+                            <span class="option-card__body">
+                              <span class="option-card__label">{option.label}</span>
+                              {#if option.description}
+                                <span class="option-card__description">{option.description}</span>
+                              {/if}
+                            </span>
+                          </label>
+                        {/each}
+                      </div>
+                      {#if fieldErrors[field.id]}
+                        <span class="field-error" id={`${field.id}-error`}>{fieldErrors[field.id]}</span>
+                      {/if}
+                    </fieldset>
                   {/if}
                 {/each}
               </div>
