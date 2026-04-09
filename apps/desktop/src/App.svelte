@@ -59,6 +59,7 @@
       activeTask?.kind === "prompt-form" ? createInitialFormValues(activeTask) : {};
 
     if (activeTask) {
+      void bridge.focusWindow();
       void resizeWindowToContent();
     }
   }
@@ -232,18 +233,22 @@
       fieldErrors = {};
     }
 
-    await submitTask({
+    const submitted = await submitTask({
       taskId: activeTask.id,
       kind: "prompt-form",
       status,
       feedback: feedback.trim(),
       values: buildPromptFormValues(activeTask, status === "cancelled")
     });
+
+    if (submitted) {
+      await bridge.hideWindow();
+    }
   }
 
-  async function submitTask(result: SubmitTaskResult): Promise<void> {
+  async function submitTask(result: SubmitTaskResult): Promise<boolean> {
     if (isSubmitting) {
-      return;
+      return false;
     }
 
     isSubmitting = true;
@@ -251,9 +256,11 @@
 
     try {
       await bridge.submitTaskResult(result);
+      return true;
     } catch (error) {
       submitError =
         error instanceof Error ? error.message : "Failed to submit task result.";
+      return false;
     } finally {
       isSubmitting = false;
     }

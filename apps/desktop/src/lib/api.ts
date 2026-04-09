@@ -138,7 +138,19 @@ function createHttpBridge(): DesktopBridge {
       }
     },
     async focusWindow() {
+      if (isTauri()) {
+        await invoke("present_window");
+        return;
+      }
+
       window.focus();
+    },
+    async hideWindow() {
+      if (!isTauri()) {
+        return;
+      }
+
+      await invoke("hide_window");
     },
     async setWindowTheme(theme) {
       if (!isTauri()) {

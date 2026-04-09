@@ -102,6 +102,7 @@ export type DesktopBridge = {
   subscribe(callback: (state: HumanTaskState) => void): () => void;
   submitTaskResult(result: SubmitTaskResult): Promise<void>;
   focusWindow(): Promise<void>;
+  hideWindow(): Promise<void>;
   setWindowTheme(theme: "light" | "dart" | "doraemon"): Promise<void>;
   resizeWindowToContent(contentHeight: number): Promise<void>;
 };

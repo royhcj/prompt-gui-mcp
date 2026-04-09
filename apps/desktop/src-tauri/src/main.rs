@@ -96,6 +96,33 @@ fn resize_window_to_content<R: Runtime>(
     Ok(())
 }
 
+#[tauri::command]
+fn present_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
+    let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
+        return Err("Main window is not available".to_string());
+    };
+
+    if window.is_minimized().map_err(|error| error.to_string())? {
+        window.unminimize().map_err(|error| error.to_string())?;
+    }
+
+    window.show().map_err(|error| error.to_string())?;
+    window.set_focus().map_err(|error| error.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+fn hide_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
+    let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
+        return Err("Main window is not available".to_string());
+    };
+
+    window.hide().map_err(|error| error.to_string())?;
+
+    Ok(())
+}
+
 fn sidecar_binary_name() -> String {
     if cfg!(target_os = "windows") {
         format!("{SIDECAR_NAME}.exe")
@@ -168,7 +195,9 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_backend_origin,
             set_window_theme,
-            resize_window_to_content
+            resize_window_to_content,
+            present_window,
+            hide_window
         ])
         .setup(|app| {
             let backend_state = spawn_backend(app)
@@ -183,13 +212,14 @@ fn main() {
                 window.on_window_event(move |event| {
                     if let WindowEvent::CloseRequested { api, .. } = event {
                         api.prevent_close();
-                        app_handle.exit(0);
+                        if let Some(main_window) = app_handle.get_webview_window(MAIN_WINDOW_LABEL) {
+                            let _ = main_window.hide();
+                        }
                     }
                 });
 
                 let _ = window.set_always_on_top(true);
-                let _ = window.show();
-                let _ = window.set_focus();
+                let _ = present_window(app.handle().clone());
             }
 
             Ok(())
