@@ -65,6 +65,7 @@ async function main(): Promise<void> {
                   type: "text",
                   id: "ticket",
                   label: "Change ticket",
+                  required: false,
                   placeholder: "CHG-1234"
                 }
               ]

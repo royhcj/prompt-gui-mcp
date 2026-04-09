@@ -353,6 +353,11 @@ textarea {
   border-color: color-mix(in srgb, var(--danger) 72%, transparent);
 }
 
+.field-card.error {
+  border-color: color-mix(in srgb, var(--danger) 64%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger) 24%, transparent);
+}
+
 .prompt-form,
 .prompt-form__fields {
   display: grid;
@@ -461,6 +466,10 @@ textarea {
 .option-card:has(input:checked) {
   border-color: color-mix(in srgb, var(--accent) 72%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+.fieldset-card.error .option-card {
+  border-color: color-mix(in srgb, var(--danger) 54%, var(--border));
 }
 
 .fieldset-card[disabled] .option-card {

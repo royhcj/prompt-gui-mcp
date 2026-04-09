@@ -332,7 +332,7 @@
                       <Markdown content={field.content} />
                     </section>
                   {:else if field.type === "text"}
-                    <label class="field-card" for={field.id}>
+                    <label class="field-card" class:error={Boolean(fieldErrors[field.id])} for={field.id}>
                       <span class="field-label">
                         {field.label}
                         {#if field.required}
@@ -359,7 +359,7 @@
                       {/if}
                     </label>
                   {:else if field.type === "textarea"}
-                    <label class="field-card" for={field.id}>
+                    <label class="field-card" class:error={Boolean(fieldErrors[field.id])} for={field.id}>
                       <span class="field-label">
                         {field.label}
                         {#if field.required}
@@ -385,7 +385,12 @@
                       {/if}
                     </label>
                   {:else if field.type === "radio"}
-                    <fieldset class="field-card fieldset-card" disabled={field.disabled}>
+                    <fieldset
+                      class="field-card fieldset-card"
+                      class:error={Boolean(fieldErrors[field.id])}
+                      disabled={field.disabled}
+                      aria-describedby={fieldErrors[field.id] ? `${field.id}-error` : undefined}
+                    >
                       <legend class="field-label">
                         {field.label}
                         {#if field.required}
@@ -421,7 +426,7 @@
                       {/if}
                     </fieldset>
                   {:else if field.type === "select"}
-                    <label class="field-card" for={field.id}>
+                    <label class="field-card" class:error={Boolean(fieldErrors[field.id])} for={field.id}>
                       <span class="field-label">
                         {field.label}
                         {#if field.required}

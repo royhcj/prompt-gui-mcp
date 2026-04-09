@@ -8,9 +8,8 @@ export type PromptFormOption = {
 
 export type PromptFormFieldBase = {
   id: string;
-  label?: string;
   helpText?: string;
-  required?: boolean;
+  required: boolean;
   disabled?: boolean;
 };
 

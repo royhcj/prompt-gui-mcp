@@ -14,7 +14,7 @@ const promptFormOptionSchema = z.object({
 const fieldBaseSchema = {
   id: nonEmptyString,
   helpText: z.string().trim().min(1).optional(),
-  required: z.boolean().optional(),
+  required: z.boolean(),
   disabled: z.boolean().optional()
 } as const;
 
