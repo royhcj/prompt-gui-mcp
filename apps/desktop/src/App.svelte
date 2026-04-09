@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { createDesktopBridge } from "./lib/api";
   import type {
     HumanTaskState,
@@ -30,6 +30,10 @@
   let fieldErrors: FieldErrors = {};
   let submitError = "";
   let isSubmitting = false;
+  let taskLayoutElement: HTMLElement | null = null;
+  let taskBodyElement: HTMLDivElement | null = null;
+
+  const WINDOW_RESIZE_HEIGHT_BUFFER = 8;
 
   const themeOptions: Array<{ id: ThemeId; label: string }> = [
     { id: "light", label: "Light" },
@@ -53,6 +57,10 @@
     fieldErrors = {};
     formValues =
       activeTask?.kind === "prompt-form" ? createInitialFormValues(activeTask) : {};
+
+    if (activeTask) {
+      void resizeWindowToContent();
+    }
   }
 
   onMount(() => {
@@ -175,6 +183,22 @@
     void bridge.setWindowTheme(nextTheme);
   }
 
+  async function resizeWindowToContent(): Promise<void> {
+    await tick();
+
+    if (!taskLayoutElement || !taskBodyElement) {
+      return;
+    }
+
+    // Use the live viewport as baseline so window paddings/chrome are included,
+    // then add/remove only the body overflow delta.
+    const contentDelta = taskBodyElement.scrollHeight - taskBodyElement.clientHeight;
+    const contentHeight = window.innerHeight + contentDelta;
+    await bridge.resizeWindowToContent(
+      Math.ceil(contentHeight + WINDOW_RESIZE_HEIGHT_BUFFER)
+    );
+  }
+
   async function submitTellHumanTask(
     status: "completed" | "failed"
   ): Promise<void> {
@@ -270,7 +294,7 @@
 <main class={`shell theme--${theme}`}>
   <section class="window">
     {#if activeTask}
-      <section class="task-layout" aria-live="polite">
+      <section class="task-layout" aria-live="polite" bind:this={taskLayoutElement}>
         <div class="task-layout__header">
           <div class="task-layout__title-block">
             <p class="eyebrow">{activeTask.kind === "prompt-form" ? "Prompt Form" : "Instruction"}</p>
@@ -312,7 +336,7 @@
           </div>
         </div>
 
-        <div class="task-layout__body">
+        <div class="task-layout__body" bind:this={taskBodyElement}>
           {#if activeTask.kind === "tell-human-to-do"}
             <div class="instruction-panel">
               <Markdown content={activeTask.instruction} />

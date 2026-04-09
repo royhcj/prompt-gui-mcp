@@ -8,7 +8,7 @@ use std::{
     sync::Mutex,
 };
 use tauri::{
-    Manager, RunEvent, Runtime, State, WindowEvent, utils::config::Color,
+    LogicalSize, Manager, RunEvent, Runtime, Size, State, WindowEvent, utils::config::Color,
 };
 
 const BACKEND_ENTRY_RELATIVE_PATH: &str = "backend/dist/src/index.cjs";
@@ -19,6 +19,10 @@ const LIGHT_WINDOW_BACKGROUND: Color = Color(235, 223, 205, 255);
 const DART_WINDOW_BACKGROUND: Color = Color(16, 39, 58, 255);
 const DORAEMON_WINDOW_BACKGROUND: Color = Color(125, 215, 255, 255);
 const DEFAULT_WINDOW_BACKGROUND: Color = DORAEMON_WINDOW_BACKGROUND;
+const MIN_WINDOW_WIDTH: f64 = 260.0;
+const MIN_WINDOW_HEIGHT: f64 = 320.0;
+const WINDOW_SCREEN_MARGIN: f64 = 72.0;
+const FALLBACK_MAX_WINDOW_HEIGHT: f64 = 900.0;
 
 struct BackendState {
     origin: String,
@@ -59,6 +63,35 @@ fn set_window_theme<R: Runtime>(app: tauri::AppHandle<R>, theme: String) -> Resu
 
     #[cfg(not(target_os = "macos"))]
     let _ = (window, theme);
+
+    Ok(())
+}
+
+#[tauri::command]
+fn resize_window_to_content<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    content_height: f64,
+) -> Result<(), String> {
+    let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
+        return Err("Main window is not available".to_string());
+    };
+
+    let scale_factor = window.scale_factor().map_err(|error| error.to_string())?;
+    let current_size = window.inner_size().map_err(|error| error.to_string())?;
+    let current_width = (current_size.width as f64 / scale_factor).max(MIN_WINDOW_WIDTH);
+
+    let monitor_height = window
+        .current_monitor()
+        .map_err(|error| error.to_string())?
+        .map(|monitor| monitor.size().height as f64 / scale_factor)
+        .unwrap_or(FALLBACK_MAX_WINDOW_HEIGHT);
+
+    let max_height = (monitor_height - WINDOW_SCREEN_MARGIN).max(MIN_WINDOW_HEIGHT);
+    let target_height = content_height.clamp(MIN_WINDOW_HEIGHT, max_height);
+
+    window
+        .set_size(Size::Logical(LogicalSize::new(current_width, target_height)))
+        .map_err(|error| error.to_string())?;
 
     Ok(())
 }
@@ -134,7 +167,8 @@ fn main() {
     let app = tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             get_backend_origin,
-            set_window_theme
+            set_window_theme,
+            resize_window_to_content
         ])
         .setup(|app| {
             let backend_state = spawn_backend(app)

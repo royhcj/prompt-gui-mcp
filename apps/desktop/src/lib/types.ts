@@ -103,6 +103,7 @@ export type DesktopBridge = {
   submitTaskResult(result: SubmitTaskResult): Promise<void>;
   focusWindow(): Promise<void>;
   setWindowTheme(theme: "light" | "dart" | "doraemon"): Promise<void>;
+  resizeWindowToContent(contentHeight: number): Promise<void>;
 };
 
 declare global {

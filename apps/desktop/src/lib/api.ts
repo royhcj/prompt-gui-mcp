@@ -146,6 +146,13 @@ function createHttpBridge(): DesktopBridge {
       }
 
       await invoke("set_window_theme", { theme });
+    },
+    async resizeWindowToContent(contentHeight) {
+      if (!isTauri()) {
+        return;
+      }
+
+      await invoke("resize_window_to_content", { contentHeight });
     }
   };
 }
