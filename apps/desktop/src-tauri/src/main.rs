@@ -11,6 +11,17 @@ use tauri::{
     LogicalSize, Manager, RunEvent, Runtime, Size, State, WindowEvent, utils::config::Color,
 };
 
+#[derive(serde::Deserialize)]
+struct BackendTaskState {
+    #[serde(rename = "activeTask")]
+    active_task: Option<ActiveTaskInfo>,
+}
+
+#[derive(serde::Deserialize)]
+struct ActiveTaskInfo {
+    id: String,
+}
+
 const BACKEND_ENTRY_RELATIVE_PATH: &str = "backend/dist/src/index.cjs";
 const BACKEND_PORT: u16 = 43118;
 const SIDECAR_NAME: &str = "i-am-mcp-node";
@@ -203,6 +214,35 @@ fn main() {
             let backend_state = spawn_backend(app)
                 .map_err(|error| io::Error::new(io::ErrorKind::Other, error))?;
             app.manage(backend_state);
+
+            // Poll the backend from the native side so window presentation works
+            // even when the WebView is hidden/throttled by the OS.
+            let app_handle_for_poll = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let client = reqwest::Client::new();
+                let state_url = format!("http://127.0.0.1:{BACKEND_PORT}/api/state");
+                let mut last_active_task_id: Option<String> = None;
+
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+
+                    let Ok(response) = client.get(&state_url).send().await else {
+                        continue;
+                    };
+
+                    let Ok(state) = response.json::<BackendTaskState>().await else {
+                        continue;
+                    };
+
+                    let current_id = state.active_task.map(|t| t.id);
+
+                    if current_id.is_some() && current_id != last_active_task_id {
+                        let _ = present_window(app_handle_for_poll.clone());
+                    }
+
+                    last_active_task_id = current_id;
+                }
+            });
 
             if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
                 #[cfg(target_os = "macos")]

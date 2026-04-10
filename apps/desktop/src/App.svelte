@@ -23,7 +23,7 @@
   };
   let activeTask: HumanTaskState["activeTask"] = null;
   let lastTaskId: string | null = null;
-  let theme: ThemeId = "dart";
+  let theme: ThemeId = "light";
   let isThemeMenuOpen = false;
   let themeMenuWrap: HTMLDivElement | null = null;
   let feedback = "";
