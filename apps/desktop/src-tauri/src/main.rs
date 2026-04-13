@@ -124,6 +124,34 @@ fn present_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    let is_http = url.starts_with("http://") || url.starts_with("https://");
+    if !is_http {
+        return Err("Only http and https URLs are supported".to_string());
+    }
+
+    #[cfg(target_os = "macos")]
+    std::process::Command::new("open")
+        .arg(&url)
+        .spawn()
+        .map_err(|error| error.to_string())?;
+
+    #[cfg(target_os = "windows")]
+    std::process::Command::new("cmd")
+        .args(["/C", "start", "", &url])
+        .spawn()
+        .map_err(|error| error.to_string())?;
+
+    #[cfg(target_os = "linux")]
+    std::process::Command::new("xdg-open")
+        .arg(&url)
+        .spawn()
+        .map_err(|error| error.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
 fn hide_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
     let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
         return Err("Main window is not available".to_string());
@@ -208,7 +236,8 @@ fn main() {
             set_window_theme,
             resize_window_to_content,
             present_window,
-            hide_window
+            hide_window,
+            open_url
         ])
         .setup(|app| {
             let backend_state = spawn_backend(app)
