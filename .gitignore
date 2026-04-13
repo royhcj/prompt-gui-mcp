@@ -6,6 +6,7 @@ node_modules/
 dist/
 **/dist/
 **/target/
+apps/desktop/.vite/
 apps/desktop/src-tauri/gen/
 
 # Local/editor noise
