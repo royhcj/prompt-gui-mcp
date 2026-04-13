@@ -108,6 +108,19 @@ function createHttpBridge(): DesktopBridge {
     },
     async submitTaskResult(result: SubmitTaskResult) {
       const origin = await resolveBackendOrigin();
+      const payload =
+        result.kind === "prompt-form"
+          ? {
+              kind: result.kind,
+              status: result.status,
+              feedback: result.feedback,
+              values: result.values
+            }
+          : {
+              kind: result.kind,
+              status: result.status,
+              feedback: result.feedback
+            };
       const response = await fetch(
         `${origin}/api/tasks/${result.taskId}/result`,
         {
@@ -115,10 +128,7 @@ function createHttpBridge(): DesktopBridge {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            status: result.status,
-            feedback: result.feedback
-          })
+          body: JSON.stringify(payload)
         }
       );
 
@@ -128,7 +138,19 @@ function createHttpBridge(): DesktopBridge {
       }
     },
     async focusWindow() {
+      if (isTauri()) {
+        await invoke("present_window");
+        return;
+      }
+
       window.focus();
+    },
+    async hideWindow() {
+      if (!isTauri()) {
+        return;
+      }
+
+      await invoke("hide_window");
     },
     async setWindowTheme(theme) {
       if (!isTauri()) {
@@ -136,6 +158,13 @@ function createHttpBridge(): DesktopBridge {
       }
 
       await invoke("set_window_theme", { theme });
+    },
+    async resizeWindowToContent(contentHeight) {
+      if (!isTauri()) {
+        return;
+      }
+
+      await invoke("resize_window_to_content", { contentHeight });
     }
   };
 }

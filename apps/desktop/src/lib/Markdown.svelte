@@ -1,6 +1,7 @@
 <script lang="ts">
   import { marked } from "marked";
   import hljs from "highlight.js";
+  import { invoke, isTauri } from "@tauri-apps/api/core";
   import "highlight.js/styles/atom-one-dark.css";
 
   interface Props {
@@ -37,9 +38,29 @@
   });
 
   const html = $derived(marked(content));
+
+  function handleClick(event: MouseEvent): void {
+    const target = event.target;
+    if (!(target instanceof HTMLAnchorElement)) {
+      return;
+    }
+
+    const url = target.href;
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (isTauri()) {
+      void invoke("open_url", { url });
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }
 </script>
 
-<div class="markdown-content">
+<div class="markdown-content" on:click={handleClick}>
   {@html html}
 </div>
 

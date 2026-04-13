@@ -30,14 +30,19 @@ body {
 }
 
 button,
+input,
+select,
 textarea {
   font: inherit;
 }
 
 .shell,
 .shell button,
+.shell input,
+.shell select,
 .shell textarea,
 .shell label,
+.shell legend,
 .shell p,
 .shell span {
   font-weight: 400;
@@ -187,13 +192,6 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
 .task-layout p {
   margin: 0;
 }
@@ -231,20 +229,43 @@ textarea {
 }
 
 .task-layout {
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  height: 100%;
   padding: 4px 2px 0;
 }
 
 .task-layout__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: nowrap;
   gap: 12px;
 }
 
-.task-layout__header .feedback {
-  margin-right: auto;
-  white-space: nowrap;
+.task-layout__title-block {
+  display: grid;
+  gap: 2px;
+}
+
+.eyebrow {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.task-title {
+  margin: 0;
+  font-size: clamp(1.05rem, 0.92rem + 0.7vw, 1.34rem);
+  line-height: 1.1;
+}
+
+.task-layout__body {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+  display: grid;
+  gap: 14px;
 }
 
 .instruction {
@@ -278,29 +299,227 @@ textarea {
   margin-top: 2px;
 }
 
-.feedback textarea {
+.feedback textarea,
+.field-card input,
+.field-card select,
+.field-card textarea {
   width: 100%;
-  min-height: 92px;
-  max-height: 190px;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.56);
   color: inherit;
+}
+
+.feedback textarea,
+.field-card textarea {
   resize: vertical;
 }
 
+.feedback textarea {
+  min-height: 92px;
+  max-height: 190px;
+}
+
+.field-card textarea {
+  min-height: 88px;
+}
+
+.shell.theme--dart .field-card input,
+.shell.theme--dart .field-card select,
+.shell.theme--dart .field-card textarea,
 .shell.theme--dart .feedback textarea {
   background: rgba(8, 19, 30, 0.6);
 }
 
+.shell.theme--doraemon .field-card input,
+.shell.theme--doraemon .field-card select,
+.shell.theme--doraemon .field-card textarea,
 .shell.theme--doraemon .feedback textarea {
   background: rgba(255, 255, 255, 0.92);
 }
 
-.feedback textarea:focus {
+.feedback textarea:focus,
+.field-card input:focus,
+.field-card select:focus,
+.field-card textarea:focus {
   outline: 2px solid color-mix(in srgb, var(--accent) 32%, transparent);
   border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+}
+
+.field-card input.error,
+.field-card select.error,
+.field-card textarea.error {
+  border-color: color-mix(in srgb, var(--danger) 72%, transparent);
+}
+
+.field-card.error {
+  border-color: color-mix(in srgb, var(--danger) 64%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger) 24%, transparent);
+}
+
+.prompt-form,
+.prompt-form__fields {
+  display: grid;
+  gap: 14px;
+}
+
+.prompt-form__description,
+.field-card,
+.instruction-panel {
+  border-radius: 14px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--accent) 15%, var(--panel-surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  backdrop-filter: blur(8px);
+}
+
+.shell.theme--dart .prompt-form__description,
+.shell.theme--dart .field-card,
+.shell.theme--dart .instruction-panel {
+  background: color-mix(in srgb, var(--accent) 16%, rgba(14, 36, 55, 0.82));
+}
+
+.shell.theme--doraemon .prompt-form__description,
+.shell.theme--doraemon .field-card,
+.shell.theme--doraemon .instruction-panel {
+  background:
+    radial-gradient(circle at 50% -16%, rgba(255, 255, 255, 0.72), transparent 28%),
+    color-mix(in srgb, var(--accent) 14%, var(--panel-surface));
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+}
+
+.field-card {
+  display: grid;
+  gap: 8px;
+}
+
+.field-card--markdown :global(.markdown-content > *:first-child),
+.prompt-form__description :global(.markdown-content > *:first-child),
+.instruction-panel :global(.markdown-content > *:first-child) {
+  margin-top: 0;
+}
+
+.field-card--markdown :global(.markdown-content > *:last-child),
+.prompt-form__description :global(.markdown-content > *:last-child),
+.instruction-panel :global(.markdown-content > *:last-child) {
+  margin-bottom: 0;
+}
+
+.fieldset-card {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+}
+
+.field-label {
+  font-size: 0.93rem;
+  line-height: 1.2;
+}
+
+.field-required {
+  color: var(--danger);
+  margin-left: 4px;
+}
+
+.field-help {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+
+.option-list {
+  display: grid;
+  gap: 8px;
+}
+
+.option-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--window-surface) 82%, transparent);
+}
+
+.option-card--radio {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.option-card__main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.option-card__main input[type="checkbox"],
+.option-card--radio input[type="radio"] {
+  width: 12px;
+  height: 12px;
+  margin: 2px 0 0;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
+}
+
+.option-card__body {
+  display: grid;
+  gap: 2px;
+}
+
+.option-card__label {
+  line-height: 1.2;
+}
+
+.option-card__description {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.option-card__detail-input {
+  margin-top: 2px;
+}
+
+.option-card:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent) 72%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+.fieldset-card.error .option-card {
+  border-color: color-mix(in srgb, var(--danger) 54%, var(--border));
+}
+
+.fieldset-card[disabled] .option-card {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.shell.theme--dart .option-card {
+  background: rgba(8, 19, 30, 0.45);
+}
+
+.shell.theme--doraemon .option-card {
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.feedback textarea::placeholder,
+.field-card input::placeholder,
+.field-card textarea::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 84%, transparent);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .actions {
@@ -337,7 +556,7 @@ textarea {
 }
 
 .button--ghost {
-  color: #000;
+  color: var(--text);
   background: color-mix(in srgb, var(--danger) 14%, transparent);
 }
 
@@ -368,25 +587,6 @@ textarea {
   font-size: 0.9rem;
 }
 
-.instruction-panel {
-  border-radius: 14px;
-  padding: 14px;
-  background: color-mix(in srgb, var(--accent) 15%, var(--panel-surface));
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
-  backdrop-filter: blur(8px);
-}
-
-.shell.theme--dart .instruction-panel {
-  background: color-mix(in srgb, var(--accent) 16%, rgba(14, 36, 55, 0.82));
-}
-
-.shell.theme--doraemon .instruction-panel {
-  background:
-    radial-gradient(circle at 50% -16%, rgba(255, 255, 255, 0.72), transparent 28%),
-    color-mix(in srgb, var(--accent) 14%, var(--panel-surface));
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -400,6 +600,14 @@ textarea {
 }
 
 @media (max-width: 520px) {
+  .window {
+    padding: 12px;
+  }
+
+  .task-layout {
+    gap: 10px;
+  }
+
   .actions {
     align-items: flex-start;
     flex-direction: column;

@@ -1,11 +1,43 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { logger } from "../logger.js";
 import { taskQueue } from "../services/runtime.js";
 import type { HumanTaskState, SubmitTaskResult } from "../types.js";
 
 const DEFAULT_PORT = 43118;
+
+const tellHumanToDoSubmitSchema = z.object({
+  kind: z.literal("tell-human-to-do"),
+  status: z.enum(["completed", "failed"]),
+  feedback: z.string().optional().default("")
+});
+
+const promptFormSubmitSchema = z.object({
+  kind: z.literal("prompt-form"),
+  status: z.enum(["submitted", "cancelled"]),
+  feedback: z.string().optional().default(""),
+  values: z.record(
+    z.string(),
+    z.union([
+      z.string(),
+      z.array(z.string()),
+      z
+        .object({
+          selected: z.array(z.string()),
+          details: z.record(z.string(), z.string().nullable()).optional()
+        })
+        .strict(),
+      z.null()
+    ])
+  )
+});
+
+const legacyTellHumanToDoSubmitSchema = z.object({
+  status: z.enum(["completed", "failed"]),
+  feedback: z.string().optional().default("")
+});
 
 function writeJson(
   response: ServerResponse,
@@ -116,14 +148,11 @@ export async function startBackendHttpServer({
       /^\/api\/tasks\/[^/]+\/result$/.test(url.pathname)
     ) {
       try {
-        const body = (await readJson(request)) as Omit<SubmitTaskResult, "taskId">;
+        const rawBody = await readJson(request);
         const taskId = url.pathname.split("/")[3];
+        const body = parseSubmitTaskBody(rawBody, taskId);
 
-        taskQueue.submit({
-          taskId,
-          status: body.status,
-          feedback: body.feedback ?? ""
-        });
+        taskQueue.submit(body);
 
         writeJson(response, 200, { ok: true });
       } catch (error) {
@@ -195,4 +224,39 @@ export async function startBackendHttpServer({
   });
 
   logger.info({ port }, "HTTP control server listening");
+}
+
+function parseSubmitTaskBody(rawBody: unknown, taskId: string): SubmitTaskResult {
+  const legacyResult = legacyTellHumanToDoSubmitSchema.safeParse(rawBody);
+  if (legacyResult.success) {
+    return {
+      taskId,
+      kind: "tell-human-to-do",
+      status: legacyResult.data.status,
+      feedback: legacyResult.data.feedback
+    };
+  }
+
+  const tellHumanResult = tellHumanToDoSubmitSchema.safeParse(rawBody);
+  if (tellHumanResult.success) {
+    return {
+      taskId,
+      kind: tellHumanResult.data.kind,
+      status: tellHumanResult.data.status,
+      feedback: tellHumanResult.data.feedback
+    };
+  }
+
+  const promptFormResult = promptFormSubmitSchema.safeParse(rawBody);
+  if (promptFormResult.success) {
+    return {
+      taskId,
+      kind: promptFormResult.data.kind,
+      status: promptFormResult.data.status,
+      feedback: promptFormResult.data.feedback,
+      values: promptFormResult.data.values
+    };
+  }
+
+  throw new Error("Invalid task submission payload.");
 }

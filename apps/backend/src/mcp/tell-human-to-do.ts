@@ -20,5 +20,5 @@ export async function handleTellHumanToDo(
     "MCP tool called"
   );
 
-  return taskQueue.enqueue(input.instruction);
+  return taskQueue.enqueueTellHumanToDo(input.instruction);
 }
