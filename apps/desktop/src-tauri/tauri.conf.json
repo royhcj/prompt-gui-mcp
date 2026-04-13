@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "i-am-mcp",
+  "version": "0.1.0",
+  "identifier": "dev.roy.iammcp",
+  "build": {
+    "beforeDevCommand": "pnpm prepare:sidecar && pnpm dev",
+    "beforeBuildCommand": "pnpm prepare:sidecar && pnpm build",
+    "devUrl": "http://127.0.0.1:4173",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "",
+        "width": 280,
+        "height": 400,
+        "minWidth": 260,
+        "minHeight": 320,
+        "resizable": true,
+        "alwaysOnTop": true,
+        "transparent": true,
+        "titleBarStyle": "Transparent"
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "resources": {
+      "../../backend/dist": "backend/dist"
+    },
+    "externalBin": [
+      "bin/i-am-mcp-node"
+    ]
+  }
+}

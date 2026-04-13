@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "pnpm build && node dist/src/index.cjs",
+    "start": "node dist/src/index.cjs",
+    "simulate": "pnpm build && node dist/scripts/simulate-tool-call.cjs",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.4",
+    "pino": "^9.9.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.8",
+    "typescript": "^5.9.3"
+  }
+}
