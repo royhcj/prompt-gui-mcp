@@ -394,6 +394,27 @@ textarea {
   gap: 8px;
 }
 
+.field-card--image {
+  padding: 10px;
+}
+
+.image-field__button {
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
+  padding: 0;
+  margin: 0;
+  cursor: zoom-in;
+}
+
+.image-field__img {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
 .field-card--markdown :global(.markdown-content > *:first-child),
 .prompt-form__description :global(.markdown-content > *:first-child),
 .instruction-panel :global(.markdown-content > *:first-child) {
@@ -585,6 +606,42 @@ textarea {
   max-width: 30ch;
   margin: 8px auto 0;
   font-size: 0.9rem;
+}
+
+.image-preview-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 4vw, 32px);
+}
+
+.image-preview-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.56);
+  cursor: zoom-out;
+}
+
+.image-preview-modal__content {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  max-height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.image-preview-modal__img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - clamp(28px, 8vw, 64px));
+  border-radius: 12px;
+  object-fit: contain;
 }
 
 .sr-only {

@@ -27,6 +27,12 @@ export type PromptFormField =
       id: string;
       content: string;
     }
+  | {
+      type: "image";
+      id: string;
+      url: string;
+      alt?: string;
+    }
   | (PromptFormFieldBase & {
       type: "text";
       label: string;

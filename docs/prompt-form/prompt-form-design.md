@@ -183,6 +183,24 @@ Use cases:
 - release summary
 - links or code blocks
 
+#### `image`
+
+Static image rendered from a URL.
+
+```ts
+{
+  type: "image";
+  id: string;
+  url: string;
+  alt?: string;
+}
+```
+
+Use cases:
+- reference screenshot
+- diagram preview
+- visual confirmation target
+
 #### `text`
 
 Single-line text input.
@@ -386,6 +404,7 @@ Minimum validation in v1:
 - `form.version` must equal `1`
 - `fields` must be non-empty
 - every field id must be unique
+- `image.url`, when present, must be a valid URL
 - every interactive field must have a non-empty `label`
 - `radio` and `select` must provide at least one option
 - option values must be unique within a field
@@ -410,7 +429,7 @@ Non-goals:
 
 - MCP exposes a new tool named `prompt-form`
 - backend validates and queues `prompt-form` requests
-- desktop can render v1 field types: `markdown`, `text`, `textarea`, `radio`, `select`
+- desktop can render v1 field types: `markdown`, `image`, `text`, `textarea`, `radio`, `select`, `checkbox-list`
 - desktop always shows bottom `feedback`, `Submit`, and `Cancel`
 - required fields are validated before submission
 - backend returns `status + feedback + values` to the calling agent

@@ -50,6 +50,12 @@ type PromptFormField =
       content: string;
     }
   | {
+      type: "image";
+      id: string;
+      url: string;
+      alt?: string;
+    }
+  | {
       type: "text";
       id: string;
       label: string;
@@ -194,7 +200,17 @@ Notes:
 - `markdown` fields are informational only
 - they do not participate in validation or submission values
 
-## 5.2 `text`
+## 5.2 `image`
+
+Render a small image preview from `url`.
+
+Behavior:
+- render image at full field width with a max-height cap
+- image field is informational only and does not participate in validation or submission values
+- tapping/clicking the image opens a preview popup
+- preview popup keeps margins from screen edges and image never exceeds viewport bounds
+
+## 5.3 `text`
 
 Render as a single-line text input.
 
@@ -204,7 +220,7 @@ Behavior:
 - submit `null` when empty and optional
 - submit the raw string when non-empty
 
-## 5.3 `textarea`
+## 5.4 `textarea`
 
 Render as a multi-line text area.
 
@@ -214,7 +230,7 @@ Behavior:
 - preserve line breaks in the submitted value
 - submit `null` when empty and optional
 
-## 5.4 `radio`
+## 5.5 `radio`
 
 Render visible mutually-exclusive options.
 
@@ -224,7 +240,7 @@ Behavior:
 - disabled fields are visible but non-interactive
 - submit the selected option value or `null`
 
-## 5.5 `select`
+## 5.6 `select`
 
 Render as a native select element.
 
@@ -377,7 +393,7 @@ This is optional. A single-file implementation is acceptable for the first pass 
 ## 13. MVP Acceptance Criteria
 
 - desktop renders `tell-human-to-do` and `prompt-form` based on task kind
-- desktop supports `markdown`, `text`, `textarea`, `radio`, and `select`
+- desktop supports `markdown`, `image`, `text`, `textarea`, `radio`, `select`, and `checkbox-list`
 - desktop keeps the shared bottom feedback field for `prompt-form`
 - required fields are validated before submit
 - `Cancel` bypasses required-field validation

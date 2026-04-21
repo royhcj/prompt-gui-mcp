@@ -34,6 +34,13 @@ const markdownFieldSchema = z.object({
   content: nonEmptyString
 });
 
+const imageFieldSchema = z.object({
+  type: z.literal("image"),
+  id: nonEmptyString,
+  url: z.string().trim().url(),
+  alt: z.string().trim().min(1).optional()
+});
+
 const textFieldSchema = z.object({
   type: z.literal("text"),
   ...fieldBaseSchema,
@@ -78,6 +85,7 @@ const checkboxListFieldSchema = z.object({
 
 const promptFormFieldSchema = z.discriminatedUnion("type", [
   markdownFieldSchema,
+  imageFieldSchema,
   textFieldSchema,
   textareaFieldSchema,
   radioFieldSchema,

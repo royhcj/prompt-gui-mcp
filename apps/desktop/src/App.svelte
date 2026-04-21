@@ -34,6 +34,7 @@
   let isSubmitting = false;
   let taskLayoutElement: HTMLElement | null = null;
   let taskBodyElement: HTMLDivElement | null = null;
+  let imagePreview: { url: string; alt: string } | null = null;
 
   const WINDOW_RESIZE_HEIGHT_BUFFER = 8;
 
@@ -61,6 +62,7 @@
       activeTask?.kind === "prompt-form" ? createInitialFormValues(activeTask) : {};
     checkboxDetailValues =
       activeTask?.kind === "prompt-form" ? createInitialCheckboxDetailValues(activeTask) : {};
+    imagePreview = null;
 
     if (activeTask) {
       void bridge.focusWindow();
@@ -105,7 +107,7 @@
     const values: FormValues = {};
 
     for (const field of task.form.fields) {
-      if (field.type === "markdown") {
+      if (field.type === "markdown" || field.type === "image") {
         continue;
       }
 
@@ -234,7 +236,7 @@
     const nextErrors: FieldErrors = {};
 
     for (const field of task.form.fields) {
-      if (field.type === "markdown" || field.disabled) {
+      if (field.type === "markdown" || field.type === "image" || field.disabled) {
         continue;
       }
 
@@ -281,7 +283,7 @@
     const values: FormValues = {};
 
     for (const field of task.form.fields) {
-      if (field.type === "markdown") {
+      if (field.type === "markdown" || field.type === "image") {
         continue;
       }
 
@@ -415,6 +417,14 @@
   }
 
   function handleKeydown(event: KeyboardEvent): void {
+    if (imagePreview) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        imagePreview = null;
+      }
+      return;
+    }
+
     if (!activeTask || isSubmitting) {
       return;
     }
@@ -441,6 +451,14 @@
       event.preventDefault();
       void submitPromptFormTask("cancelled");
     }
+  }
+
+  function openImagePreview(url: string, alt?: string): void {
+    imagePreview = { url, alt: alt ?? "Prompt form image" };
+  }
+
+  function closeImagePreview(): void {
+    imagePreview = null;
   }
 </script>
 
@@ -509,6 +527,17 @@
                   {#if field.type === "markdown"}
                     <section class="field-card field-card--markdown">
                       <Markdown content={field.content} />
+                    </section>
+                  {:else if field.type === "image"}
+                    <section class="field-card field-card--image">
+                      <button
+                        class="image-field__button"
+                        type="button"
+                        on:click={() => openImagePreview(field.url, field.alt)}
+                        aria-label="Preview image"
+                      >
+                        <img class="image-field__img" src={field.url} alt={field.alt ?? "Prompt form image"} />
+                      </button>
                     </section>
                   {:else if field.type === "text"}
                     <label class="field-card" class:error={Boolean(fieldErrors[field.id])} for={field.id}>
@@ -762,4 +791,23 @@
       </section>
     {/if}
   </section>
+  {#if imagePreview}
+    <div
+      class="image-preview-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image preview"
+      tabindex="-1"
+    >
+      <button
+        class="image-preview-modal__backdrop"
+        type="button"
+        on:click={closeImagePreview}
+        aria-label="Close image preview"
+      ></button>
+      <div class="image-preview-modal__content">
+        <img class="image-preview-modal__img" src={imagePreview.url} alt={imagePreview.alt} />
+      </div>
+    </div>
+  {/if}
 </main>

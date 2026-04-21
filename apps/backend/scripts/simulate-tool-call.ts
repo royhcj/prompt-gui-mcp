@@ -52,6 +52,12 @@ async function main(): Promise<void> {
                   content: "## Release\n\n- Commit: `a1b2c3d`\n- Branch: `main`"
                 },
                 {
+                  type: "image",
+                  id: "release_diagram",
+                  url: "https://placehold.co/1200x700/png?text=Release+Diagram",
+                  alt: "Release architecture diagram"
+                },
+                {
                   type: "radio",
                   id: "environment",
                   label: "Environment",
