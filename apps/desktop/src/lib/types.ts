@@ -134,6 +134,7 @@ export type DesktopBridge = {
   hideWindow(): Promise<void>;
   setWindowTheme(theme: "light" | "dart" | "doraemon"): Promise<void>;
   resizeWindowToContent(contentHeight: number): Promise<void>;
+  openImagePreview(url: string): Promise<void>;
 };
 
 declare global {

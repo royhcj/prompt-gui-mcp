@@ -165,6 +165,14 @@ function createHttpBridge(): DesktopBridge {
       }
 
       await invoke("resize_window_to_content", { contentHeight });
+    },
+    async openImagePreview(url: string) {
+      if (isTauri()) {
+        await invoke("open_image_preview_window", { url });
+        return;
+      }
+
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 }

@@ -34,7 +34,6 @@
   let isSubmitting = false;
   let taskLayoutElement: HTMLElement | null = null;
   let taskBodyElement: HTMLDivElement | null = null;
-  let imagePreview: { url: string; alt: string } | null = null;
 
   const WINDOW_RESIZE_HEIGHT_BUFFER = 8;
 
@@ -51,7 +50,7 @@
   $: taskHint =
     activeTask?.kind === "prompt-form"
       ? `${shortcutLabel}+Enter submits. Shift+Escape cancels.`
-      : `${shortcutLabel}+Enter completes. Shift+Enter marks failed.`;
+      : `${shortcutLabel}+Enter completes. Shift+Escape marks failed.`;
 
   $: if (activeTask?.id !== lastTaskId) {
     lastTaskId = activeTask?.id ?? null;
@@ -62,7 +61,6 @@
       activeTask?.kind === "prompt-form" ? createInitialFormValues(activeTask) : {};
     checkboxDetailValues =
       activeTask?.kind === "prompt-form" ? createInitialCheckboxDetailValues(activeTask) : {};
-    imagePreview = null;
 
     if (activeTask) {
       void bridge.focusWindow();
@@ -417,14 +415,6 @@
   }
 
   function handleKeydown(event: KeyboardEvent): void {
-    if (imagePreview) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        imagePreview = null;
-      }
-      return;
-    }
-
     if (!activeTask || isSubmitting) {
       return;
     }
@@ -441,7 +431,7 @@
       return;
     }
 
-    if (activeTask.kind === "tell-human-to-do" && event.shiftKey && event.key === "Enter") {
+    if (activeTask.kind === "tell-human-to-do" && event.shiftKey && event.key === "Escape") {
       event.preventDefault();
       void submitTellHumanTask("failed");
       return;
@@ -453,12 +443,8 @@
     }
   }
 
-  function openImagePreview(url: string, alt?: string): void {
-    imagePreview = { url, alt: alt ?? "Prompt form image" };
-  }
-
-  function closeImagePreview(): void {
-    imagePreview = null;
+  async function openImagePreview(url: string): Promise<void> {
+    await bridge.openImagePreview(url);
   }
 </script>
 
@@ -533,7 +519,7 @@
                       <button
                         class="image-field__button"
                         type="button"
-                        on:click={() => openImagePreview(field.url, field.alt)}
+                        on:click={() => void openImagePreview(field.url)}
                         aria-label="Preview image"
                       >
                         <img class="image-field__img" src={field.url} alt={field.alt ?? "Prompt form image"} />
@@ -791,23 +777,4 @@
       </section>
     {/if}
   </section>
-  {#if imagePreview}
-    <div
-      class="image-preview-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Image preview"
-      tabindex="-1"
-    >
-      <button
-        class="image-preview-modal__backdrop"
-        type="button"
-        on:click={closeImagePreview}
-        aria-label="Close image preview"
-      ></button>
-      <div class="image-preview-modal__content">
-        <img class="image-preview-modal__img" src={imagePreview.url} alt={imagePreview.alt} />
-      </div>
-    </div>
-  {/if}
 </main>
