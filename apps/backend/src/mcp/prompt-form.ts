@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { logger } from "../logger.js";
 import { taskQueue } from "../services/runtime.js";
-import type { PromptFormResult } from "../types.js";
+import type { TaskResult } from "../types.js";
 
 const nonEmptyString = z.string().trim().min(1);
 
@@ -180,7 +180,7 @@ export const promptFormInputSchema = z.object({
 
 export type PromptFormInput = z.infer<typeof promptFormInputSchema>;
 
-export async function handlePromptForm(rawInput: unknown): Promise<PromptFormResult> {
+export async function handlePromptForm(rawInput: unknown): Promise<TaskResult> {
   const input = promptFormInputSchema.parse(rawInput);
 
   logger.info(

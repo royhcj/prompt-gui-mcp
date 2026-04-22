@@ -165,6 +165,27 @@ export async function startBackendHttpServer({
       return;
     }
 
+    if (
+      request.method === "POST" &&
+      /^\/api\/tasks\/[^/]+\/extend-wait$/.test(url.pathname)
+    ) {
+      try {
+        const taskId = url.pathname.split("/")[3];
+        const extension = taskQueue.extendActiveTaskWait(taskId);
+        writeJson(response, 200, {
+          ok: true,
+          ...extension
+        });
+      } catch (error) {
+        logger.error({ error }, "Failed to extend prompt wait");
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+
+      return;
+    }
+
     if (url.pathname === "/mcp" && request.method === "POST") {
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined

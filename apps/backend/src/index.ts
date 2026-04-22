@@ -9,6 +9,11 @@ import {
   handleTellHumanToDo,
   tellHumanToDoInputSchema
 } from "./mcp/tell-human-to-do.js";
+import {
+  handleWaitForPrompt,
+  waitForPromptInputSchema,
+  type WaitForPromptInput
+} from "./mcp/wait-for-prompt.js";
 import { startBackendHttpServer } from "./transport/http.js";
 
 const DEFAULT_SERVER_PORT = 43118;
@@ -70,6 +75,29 @@ function createMcpServer(): McpServer {
     },
     async (args: PromptFormInput) => {
       const result = await handlePromptForm(args);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result)
+          }
+        ],
+        structuredContent: result
+      };
+    }
+  );
+
+  server.registerTool(
+    "wait-for-prompt",
+    {
+      title: "Wait For Prompt",
+      description:
+        "Continue waiting on an existing prompt UUID after receiving a keep-waiting response.",
+      inputSchema: waitForPromptInputSchema.shape
+    },
+    async (args: WaitForPromptInput) => {
+      const result = await handleWaitForPrompt(args);
 
       return {
         content: [
