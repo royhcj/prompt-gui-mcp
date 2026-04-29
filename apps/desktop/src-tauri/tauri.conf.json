@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "i-am-mcp",
+  "productName": "prompt-gui-mcp",
   "version": "0.1.0",
-  "identifier": "dev.roy.iammcp",
+  "identifier": "dev.roy.promptguimcp",
   "build": {
     "beforeDevCommand": "pnpm prepare:sidecar && pnpm dev",
     "beforeBuildCommand": "pnpm prepare:sidecar && pnpm build",
@@ -35,7 +35,7 @@
       "../../backend/dist": "backend/dist"
     },
     "externalBin": [
-      "bin/i-am-mcp-node"
+      "bin/prompt-gui-mcp-node"
     ]
   }
 }

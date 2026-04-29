@@ -1,8 +1,8 @@
-# i-am-mcp Feature Design
+# prompt-gui-mcp Feature Design
 
 ## 1. 目標
 
-`i-am-mcp` 是一個 MCP Server，提供 AI coding agent 一個可呼叫的工具，讓 AI 能請真人協助完成需要人類實際操作的任務。
+`prompt-gui-mcp` 是一個 MCP Server，提供 AI coding agent 一個可呼叫的工具，讓 AI 能請真人協助完成需要人類實際操作的任務。
 
 核心概念：
 - 一般 MCP：讓 AI 呼叫程式功能。

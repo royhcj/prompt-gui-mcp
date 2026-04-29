@@ -14,7 +14,7 @@
   type FieldErrors = Record<string, string>;
 
   const bridge = createDesktopBridge();
-  const THEME_STORAGE_KEY = "i-am-mcp.desktop.theme";
+  const THEME_STORAGE_KEY = "prompt-gui-mcp.desktop.theme";
   const COUNTDOWN_START_BEFORE_DEADLINE_MS = 60_000;
 
   let state: HumanTaskState = {

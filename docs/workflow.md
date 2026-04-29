@@ -1,4 +1,4 @@
-# i-am-mcp Workflow
+# prompt-gui-mcp Workflow
 
 This document explains how the app is supposed to run and how the pieces talk to each other.
 

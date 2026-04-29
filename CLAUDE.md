@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-**i-am-mcp** is a monorepo implementing an MCP (Model Context Protocol) server with a Tauri desktop companion app. It lets AI agents delegate real-world tasks to humans via two MCP tools:
+**prompt-gui-mcp** is a monorepo implementing an MCP (Model Context Protocol) server with a Tauri desktop companion app. It lets AI agents delegate real-world tasks to humans via two MCP tools:
 - `tell-human-to-do` — ask the human to complete a task and return status + feedback
 - `prompt-form` — display a structured form to collect validated user input
 
@@ -81,7 +81,7 @@ The bridge in `lib/api.ts` uses Tauri command invocation when running in the Tau
 
 ### Sidecar Build
 
-`apps/desktop/scripts/prepare-sidecar.mjs` builds the backend and copies the Node.js binary as `src-tauri/bin/i-am-mcp-node-{target}` for the current platform. This runs automatically before `tauri:dev` and `tauri:build`.
+`apps/desktop/scripts/prepare-sidecar.mjs` builds the backend and copies the Node.js binary as `src-tauri/bin/prompt-gui-mcp-node-{target}` for the current platform. This runs automatically before `tauri:dev` and `tauri:build`.
 
 ## Key Config
 

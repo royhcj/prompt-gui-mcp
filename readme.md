@@ -1,4 +1,4 @@
-# i-am-mcp
+# prompt-gui-mcp
 
 Monorepo for the backend MCP server and the Tauri desktop app that launches it as a sidecar.
 

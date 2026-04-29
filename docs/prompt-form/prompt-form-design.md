@@ -2,7 +2,7 @@
 
 ## 1. Goal
 
-`prompt-form` extends `i-am-mcp` from a single-purpose human instruction popup into a general-purpose human input workflow.
+`prompt-form` extends `prompt-gui-mcp` from a single-purpose human instruction popup into a general-purpose human input workflow.
 
 Today the app supports:
 - one MCP tool: `tell-human-to-do`

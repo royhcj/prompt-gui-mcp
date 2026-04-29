@@ -2,7 +2,7 @@
 
 ## 1. Goal
 
-Make `i-am-mcp` resilient when the coding agent does not keep one tool call open for a long time.
+Make `prompt-gui-mcp` resilient when the coding agent does not keep one tool call open for a long time.
 
 New behavior:
 - do not block forever on the initial tool call
@@ -146,7 +146,7 @@ After extension:
 ```mermaid
 sequenceDiagram
   participant Agent as Coding Agent
-  participant Backend as i-am-mcp Backend
+  participant Backend as prompt-gui-mcp Backend
   participant UI as Desktop UI
   participant User as Human
 

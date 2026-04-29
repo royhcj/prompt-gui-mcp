@@ -25,7 +25,7 @@ struct ActiveTaskInfo {
 
 const BACKEND_ENTRY_RELATIVE_PATH: &str = "backend/dist/src/index.cjs";
 const BACKEND_PORT: u16 = 43118;
-const SIDECAR_NAME: &str = "i-am-mcp-node";
+const SIDECAR_NAME: &str = "prompt-gui-mcp-node";
 const MAIN_WINDOW_LABEL: &str = "main";
 const IMAGE_PREVIEW_WINDOW_LABEL: &str = "image-preview";
 const LIGHT_WINDOW_BACKGROUND: Color = Color(235, 223, 205, 255);

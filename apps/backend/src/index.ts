@@ -38,7 +38,7 @@ function resolveServerPort(): number {
 
 function createMcpServer(): McpServer {
   const server = new McpServer({
-    name: "i-am-mcp-backend",
+    name: "prompt-gui-mcp-backend",
     version: "0.1.0"
   });
 

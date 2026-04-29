@@ -26,7 +26,7 @@ async function main(): Promise<void> {
   );
 
   const client = new Client({
-    name: "i-am-mcp-simulator",
+    name: "prompt-gui-mcp-simulator",
     version: "0.1.0"
   });
 
