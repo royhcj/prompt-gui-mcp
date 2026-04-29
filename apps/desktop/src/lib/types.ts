@@ -1,4 +1,9 @@
 export type HumanTaskStatus = "pending" | "active";
+export type PromptLifecycleStatus =
+  | "waiting-user"
+  | "waiting-agent"
+  | "completed"
+  | "timed-out";
 
 export type PromptFormOption = {
   label: string;
@@ -86,6 +91,11 @@ export type TellHumanTask = {
   instruction: string;
   createdAt: string;
   status: HumanTaskStatus;
+  promptUuid: string;
+  maxWaitMs: number;
+  deadlineAt: string;
+  extensionUsed: boolean;
+  promptStatus: PromptLifecycleStatus;
 };
 
 export type PromptFormTask = {
@@ -97,6 +107,11 @@ export type PromptFormTask = {
   cancelLabel: string;
   createdAt: string;
   status: HumanTaskStatus;
+  promptUuid: string;
+  maxWaitMs: number;
+  deadlineAt: string;
+  extensionUsed: boolean;
+  promptStatus: PromptLifecycleStatus;
   form: PromptFormDefinition;
 };
 
@@ -130,6 +145,7 @@ export type SubmitTaskResult =
 export type DesktopBridge = {
   subscribe(callback: (state: HumanTaskState) => void): () => void;
   submitTaskResult(result: SubmitTaskResult): Promise<void>;
+  extendTaskWait(taskId: string): Promise<void>;
   focusWindow(): Promise<void>;
   hideWindow(): Promise<void>;
   setWindowTheme(theme: "light" | "dart" | "doraemon"): Promise<void>;

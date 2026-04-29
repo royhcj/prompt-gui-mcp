@@ -598,6 +598,46 @@ textarea {
   color: var(--danger);
 }
 
+.task-layout__footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.task-layout__footer-meta .hint {
+  margin: 0;
+}
+
+.timeout-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+}
+
+.timeout-meta__text {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.timeout-meta__button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.timeout-meta__button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .empty-state {
   display: grid;
   place-content: center;
@@ -639,6 +679,15 @@ textarea {
   .actions {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .task-layout__footer-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .timeout-meta {
+    margin-top: 0;
   }
 
   .button {

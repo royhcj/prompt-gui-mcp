@@ -35,7 +35,19 @@ async function main(): Promise<void> {
   const tools = await client.listTools();
   console.log("Registered tools:", tools.tools.map((tool) => tool.name));
 
-  const toolName = process.argv[2] === "prompt-form" ? "prompt-form" : "tell-human-to-do";
+  const selectedTool = process.argv[2] ?? "tell-human-to-do";
+  const toolName =
+    selectedTool === "prompt-form" ||
+    selectedTool === "tell-human-to-do" ||
+    selectedTool === "wait-for-prompt"
+      ? selectedTool
+      : "tell-human-to-do";
+  const promptUuidArg = process.argv[3];
+
+  if (toolName === "wait-for-prompt" && !promptUuidArg) {
+    throw new Error("Usage: pnpm --filter backend simulate -- wait-for-prompt <promptUuid>");
+  }
+
   const response = await client.callTool(
     toolName === "prompt-form"
       ? {
@@ -78,6 +90,13 @@ async function main(): Promise<void> {
             }
           }
         }
+      : toolName === "wait-for-prompt"
+        ? {
+            name: toolName,
+            arguments: {
+              promptUuid: promptUuidArg
+            }
+          }
       : {
           name: toolName,
           arguments: {
@@ -88,6 +107,23 @@ async function main(): Promise<void> {
 
   console.log("Tool call response:");
   console.log(JSON.stringify(response.structuredContent, null, 2));
+
+  if (
+    response.structuredContent &&
+    typeof response.structuredContent === "object" &&
+    "type" in response.structuredContent &&
+    response.structuredContent.type === "keep-waiting"
+  ) {
+    const keepWaiting = response.structuredContent as {
+      type: "keep-waiting";
+      promptUuid: string;
+    };
+
+    console.log("\nFollow-up example:");
+    console.log(
+      `pnpm --filter backend simulate -- wait-for-prompt ${keepWaiting.promptUuid}`
+    );
+  }
 
   await client.close();
 }

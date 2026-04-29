@@ -137,6 +137,17 @@ function createHttpBridge(): DesktopBridge {
         throw new Error(payload.error ?? "Failed to submit task result.");
       }
     },
+    async extendTaskWait(taskId: string) {
+      const origin = await resolveBackendOrigin();
+      const response = await fetch(`${origin}/api/tasks/${taskId}/extend-wait`, {
+        method: "POST"
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error ?? "Failed to extend task wait.");
+      }
+    },
     async focusWindow() {
       if (isTauri()) {
         await invoke("present_window");

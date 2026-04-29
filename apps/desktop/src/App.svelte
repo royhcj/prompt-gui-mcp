@@ -15,6 +15,7 @@
 
   const bridge = createDesktopBridge();
   const THEME_STORAGE_KEY = "i-am-mcp.desktop.theme";
+  const COUNTDOWN_START_BEFORE_DEADLINE_MS = 60_000;
 
   let state: HumanTaskState = {
     activeTask: null,
@@ -32,6 +33,9 @@
   let fieldErrors: FieldErrors = {};
   let submitError = "";
   let isSubmitting = false;
+  let isExtendingWait = false;
+  let nowMs = Date.now();
+  let countdownTimer: number | null = null;
   let taskLayoutElement: HTMLElement | null = null;
   let taskBodyElement: HTMLDivElement | null = null;
 
@@ -44,6 +48,14 @@
   ];
 
   $: activeTask = state.activeTask;
+  $: deadlineAtMs = activeTask ? Date.parse(activeTask.deadlineAt) : null;
+  $: remainingMs =
+    deadlineAtMs === null ? 0 : Math.max(0, deadlineAtMs - nowMs);
+  $: countdownSeconds = Math.ceil(remainingMs / 1000);
+  $: showCountdown =
+    Boolean(activeTask) && remainingMs <= COUNTDOWN_START_BEFORE_DEADLINE_MS;
+  $: canExtendWait =
+    Boolean(activeTask) && showCountdown && !activeTask?.extensionUsed;
   $: shortcutLabel = navigator.platform.includes("Mac") ? "Cmd" : "Ctrl";
   $: taskTitle =
     activeTask?.kind === "prompt-form" ? activeTask.title : "Human Task";
@@ -80,6 +92,10 @@
       state = nextState;
     });
 
+    countdownTimer = window.setInterval(() => {
+      nowMs = Date.now();
+    }, 1000);
+
     function onWindowClick(event: MouseEvent): void {
       if (!themeMenuWrap) {
         isThemeMenuOpen = false;
@@ -98,6 +114,10 @@
     return () => {
       window.removeEventListener("click", onWindowClick);
       unsubscribe();
+      if (countdownTimer !== null) {
+        window.clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
     };
   });
 
@@ -446,6 +466,24 @@
   async function openImagePreview(url: string): Promise<void> {
     await bridge.openImagePreview(url);
   }
+
+  async function extendWait(): Promise<void> {
+    if (!activeTask || !canExtendWait || isExtendingWait) {
+      return;
+    }
+
+    isExtendingWait = true;
+    submitError = "";
+
+    try {
+      await bridge.extendTaskWait(activeTask.id);
+    } catch (error) {
+      submitError =
+        error instanceof Error ? error.message : "Failed to extend task wait.";
+    } finally {
+      isExtendingWait = false;
+    }
+  }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -766,7 +804,24 @@
           {/if}
         </div>
 
-        <p class="hint">{taskHint}</p>
+        <div class="task-layout__footer-meta">
+          <p class="hint">{taskHint}</p>
+          {#if showCountdown}
+            <div class="timeout-meta">
+              <span class="timeout-meta__text">timeout in {Math.max(0, countdownSeconds)} s</span>
+              {#if canExtendWait}
+                <button
+                  class="timeout-meta__button"
+                  type="button"
+                  disabled={isExtendingWait}
+                  on:click={() => void extendWait()}
+                >
+                  Keep waiting
+                </button>
+              {/if}
+            </div>
+          {/if}
+        </div>
       </section>
     {:else}
       <section class="empty-state" aria-live="polite">
