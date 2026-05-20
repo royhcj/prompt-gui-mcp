@@ -9,13 +9,14 @@
   } from "./lib/types";
   import Markdown from "./lib/Markdown.svelte";
 
-  type ThemeId = "light" | "dart" | "doraemon";
+  type ThemeId = "light" | "dark" | "doraemon";
   type FormValues = Record<string, PromptFormValue>;
   type FieldErrors = Record<string, string>;
 
   const bridge = createDesktopBridge();
   const THEME_STORAGE_KEY = "prompt-gui-mcp.desktop.theme";
   const COUNTDOWN_START_BEFORE_DEADLINE_MS = 60_000;
+  const TIMEOUT_ALERT_THRESHOLD_MS = 15_000;
 
   let state: HumanTaskState = {
     activeTask: null,
@@ -38,12 +39,14 @@
   let countdownTimer: number | null = null;
   let taskLayoutElement: HTMLElement | null = null;
   let taskBodyElement: HTMLDivElement | null = null;
+  let isTimeoutAlertOpen = false;
+  let timeoutAlertDismissedKey: string | null = null;
 
   const WINDOW_RESIZE_HEIGHT_BUFFER = 8;
 
   const themeOptions: Array<{ id: ThemeId; label: string }> = [
     { id: "light", label: "Light" },
-    { id: "dart", label: "Dart" },
+    { id: "dark", label: "Dark" },
     { id: "doraemon", label: "Doraemon" }
   ];
 
@@ -56,6 +59,19 @@
     Boolean(activeTask) && remainingMs <= COUNTDOWN_START_BEFORE_DEADLINE_MS;
   $: canExtendWait =
     Boolean(activeTask) && showCountdown && !activeTask?.extensionUsed;
+  $: timeoutAlertKey =
+    activeTask && deadlineAtMs !== null ? `${activeTask.id}:${deadlineAtMs}` : null;
+  $: shouldShowTimeoutAlert =
+    Boolean(activeTask) &&
+    remainingMs > 0 &&
+    remainingMs <= TIMEOUT_ALERT_THRESHOLD_MS &&
+    timeoutAlertKey !== null &&
+    timeoutAlertDismissedKey !== timeoutAlertKey;
+  $: if (!shouldShowTimeoutAlert) {
+    isTimeoutAlertOpen = false;
+  } else if (!isTimeoutAlertOpen) {
+    isTimeoutAlertOpen = true;
+  }
   $: shortcutLabel = navigator.platform.includes("Mac") ? "Cmd" : "Ctrl";
   $: taskTitle =
     activeTask?.kind === "prompt-form" ? activeTask.title : "Human Task";
@@ -73,6 +89,8 @@
       activeTask?.kind === "prompt-form" ? createInitialFormValues(activeTask) : {};
     checkboxDetailValues =
       activeTask?.kind === "prompt-form" ? createInitialCheckboxDetailValues(activeTask) : {};
+    isTimeoutAlertOpen = false;
+    timeoutAlertDismissedKey = null;
 
     if (activeTask) {
       void bridge.focusWindow();
@@ -82,8 +100,10 @@
 
   onMount(() => {
     const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (savedTheme === "light" || savedTheme === "dart" || savedTheme === "doraemon") {
+    if (savedTheme === "light" || savedTheme === "dark" || savedTheme === "doraemon") {
       theme = savedTheme;
+    } else if (savedTheme === "dart") {
+      theme = "dark";
     }
 
     void bridge.setWindowTheme(theme);
@@ -467,9 +487,9 @@
     await bridge.openImagePreview(url);
   }
 
-  async function extendWait(): Promise<void> {
+  async function extendWait(): Promise<boolean> {
     if (!activeTask || !canExtendWait || isExtendingWait) {
-      return;
+      return false;
     }
 
     isExtendingWait = true;
@@ -477,11 +497,28 @@
 
     try {
       await bridge.extendTaskWait(activeTask.id);
+      return true;
     } catch (error) {
       submitError =
         error instanceof Error ? error.message : "Failed to extend task wait.";
+      return false;
     } finally {
       isExtendingWait = false;
+    }
+  }
+
+  function dismissTimeoutAlert(): void {
+    isTimeoutAlertOpen = false;
+    if (timeoutAlertKey) {
+      timeoutAlertDismissedKey = timeoutAlertKey;
+    }
+  }
+
+  async function handleTimeoutAlertExtend(): Promise<void> {
+    const extended = await extendWait();
+    if (extended) {
+      isTimeoutAlertOpen = false;
+      timeoutAlertDismissedKey = null;
     }
   }
 </script>
@@ -822,6 +859,39 @@
             </div>
           {/if}
         </div>
+
+        {#if isTimeoutAlertOpen}
+          <div class="timeout-alert-overlay" role="presentation">
+            <div
+              class="timeout-alert"
+              role="alertdialog"
+              aria-modal="true"
+              aria-label="Timeout warning"
+            >
+              <p class="timeout-alert__title">Task will timeout soon</p>
+              <p class="timeout-alert__body">
+                Time remaining: {Math.max(0, countdownSeconds)}s
+              </p>
+              <div class="timeout-alert__actions">
+                <button
+                  class="button button--ghost timeout-alert__button"
+                  type="button"
+                  on:click={dismissTimeoutAlert}
+                >
+                  Got it
+                </button>
+                <button
+                  class="button button--primary timeout-alert__button"
+                  type="button"
+                  disabled={!canExtendWait || isExtendingWait}
+                  on:click={() => void handleTimeoutAlertExtend()}
+                >
+                  Extend time
+                </button>
+              </div>
+            </div>
+          </div>
+        {/if}
       </section>
     {:else}
       <section class="empty-state" aria-live="polite">

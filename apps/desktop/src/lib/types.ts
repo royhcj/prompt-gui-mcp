@@ -148,7 +148,7 @@ export type DesktopBridge = {
   extendTaskWait(taskId: string): Promise<void>;
   focusWindow(): Promise<void>;
   hideWindow(): Promise<void>;
-  setWindowTheme(theme: "light" | "dart" | "doraemon"): Promise<void>;
+  setWindowTheme(theme: "light" | "dark" | "doraemon"): Promise<void>;
   resizeWindowToContent(contentHeight: number): Promise<void>;
   openImagePreview(url: string): Promise<void>;
 };

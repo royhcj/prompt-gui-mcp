@@ -72,7 +72,7 @@ textarea {
   color: var(--text);
 }
 
-.shell.theme--dart {
+.shell.theme--dark {
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   --app-background: linear-gradient(170deg, #0e1f2f 0%, #08131f 100%);
   --window-background:
@@ -183,7 +183,7 @@ textarea {
   overflow: hidden;
 }
 
-.shell.theme--dart .window {
+.shell.theme--dark .window {
   border-radius: 0;
 }
 
@@ -220,7 +220,7 @@ textarea {
   backdrop-filter: blur(8px);
 }
 
-.shell.theme--dart .empty-state {
+.shell.theme--dark .empty-state {
   border-radius: 10px;
 }
 
@@ -325,10 +325,10 @@ textarea {
   min-height: 88px;
 }
 
-.shell.theme--dart .field-card input,
-.shell.theme--dart .field-card select,
-.shell.theme--dart .field-card textarea,
-.shell.theme--dart .feedback textarea {
+.shell.theme--dark .field-card input,
+.shell.theme--dark .field-card select,
+.shell.theme--dark .field-card textarea,
+.shell.theme--dark .feedback textarea {
   background: rgba(8, 19, 30, 0.6);
 }
 
@@ -374,9 +374,9 @@ textarea {
   backdrop-filter: blur(8px);
 }
 
-.shell.theme--dart .prompt-form__description,
-.shell.theme--dart .field-card,
-.shell.theme--dart .instruction-panel {
+.shell.theme--dark .prompt-form__description,
+.shell.theme--dark .field-card,
+.shell.theme--dark .instruction-panel {
   background: color-mix(in srgb, var(--accent) 16%, rgba(14, 36, 55, 0.82));
 }
 
@@ -529,7 +529,7 @@ textarea {
   opacity: 0.72;
 }
 
-.shell.theme--dart .option-card {
+.shell.theme--dark .option-card {
   background: rgba(8, 19, 30, 0.45);
 }
 
@@ -573,7 +573,7 @@ textarea {
   background: var(--accent);
 }
 
-.shell.theme--dart .button--primary {
+.shell.theme--dark .button--primary {
   color: #032335;
 }
 
@@ -636,6 +636,53 @@ textarea {
 .timeout-meta__button:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+.timeout-alert-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--window-surface) 58%, rgba(0, 0, 0, 0.18));
+  backdrop-filter: blur(2px);
+}
+
+.timeout-alert {
+  width: min(380px, 100%);
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  background: var(--panel-surface);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.shell.theme--doraemon .timeout-alert {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.timeout-alert__title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.timeout-alert__body {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.timeout-alert__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.timeout-alert__button {
+  min-width: 102px;
 }
 
 .empty-state {

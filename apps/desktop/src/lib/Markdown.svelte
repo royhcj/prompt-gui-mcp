@@ -72,15 +72,20 @@
   }
 
   :global(.markdown-pre) {
-    background: rgba(0, 0, 0, 0.12);
+    background: rgb(249, 241, 229);
     border-radius: 8px;
     padding: 12px;
     overflow-x: auto;
     margin: 8px 0;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 
-  :global(.shell.theme--dart .markdown-pre) {
+  :global(.shell.theme--doraemon .markdown-pre) {
+    background: rgb(249, 241, 229);
+    border-color: rgba(6, 73, 112, 0.22);
+  }
+
+  :global(.shell.theme--dark .markdown-pre) {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.1);
   }
@@ -91,6 +96,59 @@
     line-height: 1.4;
   }
 
+  /* Darker, readable token palette for light-ish code block backgrounds. */
+  :global(.shell.theme--light .markdown-code),
+  :global(.shell.theme--doraemon .markdown-code) {
+    color: #2a1c13;
+  }
+
+  :global(.shell.theme--light .markdown-code .hljs-keyword),
+  :global(.shell.theme--doraemon .markdown-code .hljs-keyword),
+  :global(.shell.theme--light .markdown-code .hljs-selector-tag),
+  :global(.shell.theme--doraemon .markdown-code .hljs-selector-tag),
+  :global(.shell.theme--light .markdown-code .hljs-literal),
+  :global(.shell.theme--doraemon .markdown-code .hljs-literal) {
+    color: #7a2f12;
+    font-weight: 600;
+  }
+
+  :global(.shell.theme--light .markdown-code .hljs-string),
+  :global(.shell.theme--doraemon .markdown-code .hljs-string),
+  :global(.shell.theme--light .markdown-code .hljs-attr),
+  :global(.shell.theme--doraemon .markdown-code .hljs-attr) {
+    color: #0b5a3b;
+  }
+
+  :global(.shell.theme--light .markdown-code .hljs-title),
+  :global(.shell.theme--doraemon .markdown-code .hljs-title),
+  :global(.shell.theme--light .markdown-code .hljs-function .hljs-title),
+  :global(.shell.theme--doraemon .markdown-code .hljs-function .hljs-title),
+  :global(.shell.theme--light .markdown-code .hljs-type),
+  :global(.shell.theme--doraemon .markdown-code .hljs-type),
+  :global(.shell.theme--light .markdown-code .hljs-built_in),
+  :global(.shell.theme--doraemon .markdown-code .hljs-built_in),
+  :global(.shell.theme--light .markdown-code .hljs-title.class_),
+  :global(.shell.theme--doraemon .markdown-code .hljs-title.class_),
+  :global(.shell.theme--light .markdown-code .hljs-variable),
+  :global(.shell.theme--doraemon .markdown-code .hljs-variable) {
+    color: #20466f;
+  }
+
+  :global(.shell.theme--light .markdown-code .hljs-number),
+  :global(.shell.theme--doraemon .markdown-code .hljs-number),
+  :global(.shell.theme--light .markdown-code .hljs-symbol),
+  :global(.shell.theme--doraemon .markdown-code .hljs-symbol) {
+    color: #7b4a08;
+  }
+
+  :global(.shell.theme--light .markdown-code .hljs-comment),
+  :global(.shell.theme--doraemon .markdown-code .hljs-comment),
+  :global(.shell.theme--light .markdown-code .hljs-quote),
+  :global(.shell.theme--doraemon .markdown-code .hljs-quote) {
+    color: #6a6259;
+    font-style: italic;
+  }
+
   :global(.markdown-inline-code) {
     background: rgba(0, 0, 0, 0.08);
     padding: 2px 6px;
@@ -99,7 +157,7 @@
     font-size: 0.9em;
   }
 
-  :global(.shell.theme--dart .markdown-inline-code) {
+  :global(.shell.theme--dark .markdown-inline-code) {
     background: rgba(255, 255, 255, 0.1);
   }
 
@@ -146,7 +204,7 @@
     color: rgba(0, 0, 0, 0.7);
   }
 
-  :global(.shell.theme--dart .markdown-content blockquote) {
+  :global(.shell.theme--dark .markdown-content blockquote) {
     border-color: rgba(255, 255, 255, 0.2);
     color: rgba(255, 255, 255, 0.7);
   }
@@ -174,7 +232,7 @@
     border-top: 1px solid rgba(0, 0, 0, 0.1);
   }
 
-  :global(.shell.theme--dart .markdown-content hr) {
+  :global(.shell.theme--dark .markdown-content hr) {
     border-top-color: rgba(255, 255, 255, 0.1);
   }
 </style>
