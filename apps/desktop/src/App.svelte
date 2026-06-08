@@ -909,23 +909,26 @@
             <li>
               Add this Streamable HTTP endpoint:
               <code>http://127.0.0.1:43118/mcp</code>
+              <div class="setup-guide__commands">
+                <div class="setup-guide__command">
+                  <span>Claude Code</span>
+                  <code>claude mcp add --transport http prompt-gui http://127.0.0.1:43118/mcp</code>
+                </div>
+                <div class="setup-guide__command">
+                  <span>Codex</span>
+                  <code>codex mcp add prompt-gui --url http://127.0.0.1:43118/mcp</code>
+                </div>
+                <div class="setup-guide__command">
+                  <span>Other MCP clients</span>
+                  <code>{"{\"type\":\"http\",\"url\":\"http://127.0.0.1:43118/mcp\"}"}</code>
+                </div>
+              </div>
+            </li>
+            <li>
+              Ask your coding agent to try it:
+              <code>Use the prompt-gui MCP server to ask me for my nickname, favorite project type, and hobbies.</code>
             </li>
           </ol>
-
-          <div class="setup-guide__commands">
-            <div class="setup-guide__command">
-              <span>Claude Code</span>
-              <code>claude mcp add --transport http prompt-gui http://127.0.0.1:43118/mcp</code>
-            </div>
-            <div class="setup-guide__command">
-              <span>Codex</span>
-              <code>codex mcp add prompt-gui --url http://127.0.0.1:43118/mcp</code>
-            </div>
-            <div class="setup-guide__command">
-              <span>Other MCP clients</span>
-              <code>{"{\"type\":\"http\",\"url\":\"http://127.0.0.1:43118/mcp\"}"}</code>
-            </div>
-          </div>
         </div>
       </section>
     {/if}
