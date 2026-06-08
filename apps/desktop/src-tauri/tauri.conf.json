@@ -31,6 +31,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "macOS": {
+      "entitlements": "./Entitlements.plist"
+    },
     "resources": {
       "../../backend/dist": "backend/dist"
     },
