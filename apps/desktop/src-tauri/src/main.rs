@@ -345,9 +345,21 @@ fn main() {
         .expect("failed to build tauri application");
 
     app.run(|app_handle, event| {
-        if let RunEvent::Exit = event {
-            let state = app_handle.state::<BackendState>();
-            state.shutdown();
+        match event {
+            #[cfg(target_os = "macos")]
+            RunEvent::Reopen {
+                has_visible_windows,
+                ..
+            } => {
+                if !has_visible_windows {
+                    let _ = present_window(app_handle.clone());
+                }
+            }
+            RunEvent::Exit => {
+                let state = app_handle.state::<BackendState>();
+                state.shutdown();
+            }
+            _ => {}
         }
     });
 }
