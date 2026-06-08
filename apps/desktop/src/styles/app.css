@@ -687,7 +687,13 @@ textarea {
 
 .empty-state {
   display: grid;
-  place-content: center;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.empty-state__intro {
   text-align: center;
 }
 
@@ -700,6 +706,59 @@ textarea {
   max-width: 30ch;
   margin: 8px auto 0;
   font-size: 0.9rem;
+}
+
+.setup-guide {
+  min-height: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  overflow: auto;
+  text-align: left;
+}
+
+.setup-guide__title {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.setup-guide__steps {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.setup-guide__steps li + li {
+  margin-top: 5px;
+}
+
+.setup-guide code {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 5px 6px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.setup-guide__commands {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.setup-guide__command span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 .sr-only {

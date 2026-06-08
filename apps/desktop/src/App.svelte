@@ -895,10 +895,38 @@
       </section>
     {:else}
       <section class="empty-state" aria-live="polite">
-        <p class="empty-state__title">No active task</p>
-        <p class="empty-state__body">
-          The app is ready for the next request.
-        </p>
+        <div class="empty-state__intro">
+          <p class="empty-state__title">No active task</p>
+          <p class="empty-state__body">
+            The app is ready for the next request.
+          </p>
+        </div>
+
+        <div class="setup-guide" aria-label="Agent setup guide">
+          <p class="setup-guide__title">Connect your agent</p>
+          <ol class="setup-guide__steps">
+            <li>Keep prompt-gui-mcp running.</li>
+            <li>
+              Add this Streamable HTTP endpoint:
+              <code>http://127.0.0.1:43118/mcp</code>
+            </li>
+          </ol>
+
+          <div class="setup-guide__commands">
+            <div class="setup-guide__command">
+              <span>Claude Code</span>
+              <code>claude mcp add --transport http prompt-gui http://127.0.0.1:43118/mcp</code>
+            </div>
+            <div class="setup-guide__command">
+              <span>Codex</span>
+              <code>codex mcp add prompt-gui --url http://127.0.0.1:43118/mcp</code>
+            </div>
+            <div class="setup-guide__command">
+              <span>Other MCP clients</span>
+              <code>{"{\"type\":\"http\",\"url\":\"http://127.0.0.1:43118/mcp\"}"}</code>
+            </div>
+          </div>
+        </div>
       </section>
     {/if}
   </section>
