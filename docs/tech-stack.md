@@ -1,4 +1,4 @@
-# i-am-mcp Tech Stack
+# prompt-gui-mcp Tech Stack
 
 ## 1. 結論
 

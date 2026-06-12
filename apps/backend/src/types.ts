@@ -1,4 +1,9 @@
 export type HumanTaskStatus = "pending" | "active";
+export type PromptLifecycleStatus =
+  | "waiting-user"
+  | "waiting-agent"
+  | "completed"
+  | "timed-out";
 
 export type PromptFormOption = {
   label: string;
@@ -26,6 +31,12 @@ export type PromptFormField =
       type: "markdown";
       id: string;
       content: string;
+    }
+  | {
+      type: "image";
+      id: string;
+      url: string;
+      alt?: string;
     }
   | (PromptFormFieldBase & {
       type: "text";
@@ -71,6 +82,11 @@ export type TellHumanTask = {
   instruction: string;
   createdAt: string;
   status: HumanTaskStatus;
+  promptUuid: string;
+  maxWaitMs: number;
+  deadlineAt: string;
+  extensionUsed: boolean;
+  promptStatus: PromptLifecycleStatus;
 };
 
 export type PromptFormTask = {
@@ -82,6 +98,11 @@ export type PromptFormTask = {
   cancelLabel: string;
   createdAt: string;
   status: HumanTaskStatus;
+  promptUuid: string;
+  maxWaitMs: number;
+  deadlineAt: string;
+  extensionUsed: boolean;
+  promptStatus: PromptLifecycleStatus;
   form: PromptFormDefinition;
 };
 
@@ -94,6 +115,8 @@ export type HumanTaskState = {
 };
 
 export type TellHumanToDoResult = {
+  type: "user-reply";
+  promptUuid: string;
   status: "completed" | "failed";
   feedback: string;
 };
@@ -108,12 +131,41 @@ export type PromptFormValue =
   | null;
 
 export type PromptFormResult = {
+  type: "user-reply";
+  promptUuid: string;
   status: "submitted" | "cancelled";
   feedback: string;
   values: Record<string, PromptFormValue>;
 };
 
-export type TaskResult = TellHumanToDoResult | PromptFormResult;
+export type KeepWaitingResult = {
+  type: "keep-waiting";
+  promptUuid: string;
+  message: string;
+  nextRecommendedWaitMs: number;
+  elapsedMs: number;
+  remainingMs: number;
+};
+
+export type TimeoutResult = {
+  type: "timeout";
+  promptUuid: string;
+  message: string;
+  elapsedMs: number;
+  maxWaitMs: number;
+};
+
+export type TaskResult =
+  | KeepWaitingResult
+  | TimeoutResult
+  | TellHumanToDoResult
+  | PromptFormResult;
+
+export type WaitForPromptInput = {
+  promptUuid: string;
+};
+
+export type WaitForPromptResult = TaskResult;
 
 export type SubmitTellHumanToDoResult = {
   taskId: string;

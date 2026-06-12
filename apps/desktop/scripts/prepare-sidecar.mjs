@@ -8,7 +8,7 @@ const execFileAsync = promisify(execFile);
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const backendRoot = fileURLToPath(new URL("../../backend", import.meta.url));
 const sidecarBasePath = fileURLToPath(
-  new URL("../src-tauri/bin/i-am-mcp-node", import.meta.url)
+  new URL("../src-tauri/bin/prompt-gui-mcp-node", import.meta.url)
 );
 
 function resolveTargetTriple() {

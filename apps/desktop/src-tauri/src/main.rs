@@ -8,7 +8,8 @@ use std::{
     sync::Mutex,
 };
 use tauri::{
-    LogicalSize, Manager, RunEvent, Runtime, Size, State, WindowEvent, utils::config::Color,
+    LogicalSize, Manager, RunEvent, Runtime, Size, State, WebviewUrl, WebviewWindowBuilder,
+    WindowEvent, utils::config::Color,
 };
 
 #[derive(serde::Deserialize)]
@@ -24,16 +25,21 @@ struct ActiveTaskInfo {
 
 const BACKEND_ENTRY_RELATIVE_PATH: &str = "backend/dist/src/index.cjs";
 const BACKEND_PORT: u16 = 43118;
-const SIDECAR_NAME: &str = "i-am-mcp-node";
+const SIDECAR_NAME: &str = "prompt-gui-mcp-node";
 const MAIN_WINDOW_LABEL: &str = "main";
+const IMAGE_PREVIEW_WINDOW_LABEL: &str = "image-preview";
 const LIGHT_WINDOW_BACKGROUND: Color = Color(235, 223, 205, 255);
-const DART_WINDOW_BACKGROUND: Color = Color(16, 39, 58, 255);
+const DARK_WINDOW_BACKGROUND: Color = Color(16, 39, 58, 255);
 const DORAEMON_WINDOW_BACKGROUND: Color = Color(125, 215, 255, 255);
 const DEFAULT_WINDOW_BACKGROUND: Color = DORAEMON_WINDOW_BACKGROUND;
 const MIN_WINDOW_WIDTH: f64 = 260.0;
 const MIN_WINDOW_HEIGHT: f64 = 320.0;
 const WINDOW_SCREEN_MARGIN: f64 = 72.0;
 const FALLBACK_MAX_WINDOW_HEIGHT: f64 = 900.0;
+const IMAGE_PREVIEW_WIDTH: f64 = 1000.0;
+const IMAGE_PREVIEW_HEIGHT: f64 = 760.0;
+const IMAGE_PREVIEW_MIN_WIDTH: f64 = 360.0;
+const IMAGE_PREVIEW_MIN_HEIGHT: f64 = 240.0;
 
 struct BackendState {
     origin: String,
@@ -125,8 +131,7 @@ fn present_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
 
 #[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
-    let is_http = url.starts_with("http://") || url.starts_with("https://");
-    if !is_http {
+    if !is_supported_http_url(&url) {
         return Err("Only http and https URLs are supported".to_string());
     }
 
@@ -152,6 +157,44 @@ fn open_url(url: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn open_image_preview_window<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    url: String,
+) -> Result<(), String> {
+    if !is_supported_http_url(&url) {
+        return Err("Only http and https URLs are supported".to_string());
+    }
+
+    if let Some(existing_window) = app.get_webview_window(IMAGE_PREVIEW_WINDOW_LABEL) {
+        let _ = existing_window.close();
+    }
+
+    let parsed_url = url
+        .parse::<tauri::Url>()
+        .map_err(|error| format!("Invalid preview url: {error}"))?;
+
+    let preview_window = WebviewWindowBuilder::new(
+        &app,
+        IMAGE_PREVIEW_WINDOW_LABEL,
+        WebviewUrl::External(parsed_url),
+    )
+    .title("Image Preview")
+    .inner_size(IMAGE_PREVIEW_WIDTH, IMAGE_PREVIEW_HEIGHT)
+    .min_inner_size(IMAGE_PREVIEW_MIN_WIDTH, IMAGE_PREVIEW_MIN_HEIGHT)
+    .resizable(true)
+    .always_on_top(true)
+    .center()
+    .build()
+    .map_err(|error| error.to_string())?;
+
+    preview_window
+        .set_focus()
+        .map_err(|error| error.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
 fn hide_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
     let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
         return Err("Main window is not available".to_string());
@@ -160,6 +203,10 @@ fn hide_window<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
     window.hide().map_err(|error| error.to_string())?;
 
     Ok(())
+}
+
+fn is_supported_http_url(url: &str) -> bool {
+    url.starts_with("http://") || url.starts_with("https://")
 }
 
 fn sidecar_binary_name() -> String {
@@ -223,7 +270,7 @@ fn spawn_backend<R: Runtime>(app: &tauri::App<R>) -> Result<BackendState, String
 #[cfg(target_os = "macos")]
 fn window_background_for_theme(theme: &str) -> Color {
     match theme {
-        "dart" => DART_WINDOW_BACKGROUND,
+        "dark" | "dart" => DARK_WINDOW_BACKGROUND,
         "doraemon" => DORAEMON_WINDOW_BACKGROUND,
         _ => LIGHT_WINDOW_BACKGROUND,
     }
@@ -237,7 +284,8 @@ fn main() {
             resize_window_to_content,
             present_window,
             hide_window,
-            open_url
+            open_url,
+            open_image_preview_window
         ])
         .setup(|app| {
             let backend_state = spawn_backend(app)
@@ -297,9 +345,21 @@ fn main() {
         .expect("failed to build tauri application");
 
     app.run(|app_handle, event| {
-        if let RunEvent::Exit = event {
-            let state = app_handle.state::<BackendState>();
-            state.shutdown();
+        match event {
+            #[cfg(target_os = "macos")]
+            RunEvent::Reopen {
+                has_visible_windows,
+                ..
+            } => {
+                if !has_visible_windows {
+                    let _ = present_window(app_handle.clone());
+                }
+            }
+            RunEvent::Exit => {
+                let state = app_handle.state::<BackendState>();
+                state.shutdown();
+            }
+            _ => {}
         }
     });
 }

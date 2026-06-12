@@ -1,9 +1,9 @@
-# i-am-mcp Project Structure
+# prompt-gui-mcp Project Structure
 
 ## 1. 建議目錄
 
 ```text
-i-am-mcp/
+prompt-gui-mcp/
 ├─ docs/
 │  ├─ feature-design.md
 │  ├─ tech-stack.md

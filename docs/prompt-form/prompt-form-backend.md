@@ -95,6 +95,12 @@ type PromptFormField =
       content: string;
     }
   | {
+      type: "image";
+      id: string;
+      url: string;
+      alt?: string;
+    }
+  | {
       type: "text";
       id: string;
       label: string;
@@ -207,6 +213,7 @@ Validation rules:
 - non-empty `fields`
 - unique field ids across all fields
 - non-empty `content` for `markdown`
+- valid `url` for `image`
 - non-empty `label` for interactive fields
 - non-empty `options` for `radio` and `select`
 - unique option values within one field

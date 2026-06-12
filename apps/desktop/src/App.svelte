@@ -9,12 +9,14 @@
   } from "./lib/types";
   import Markdown from "./lib/Markdown.svelte";
 
-  type ThemeId = "light" | "dart" | "doraemon";
+  type ThemeId = "light" | "dark" | "doraemon";
   type FormValues = Record<string, PromptFormValue>;
   type FieldErrors = Record<string, string>;
 
   const bridge = createDesktopBridge();
-  const THEME_STORAGE_KEY = "i-am-mcp.desktop.theme";
+  const THEME_STORAGE_KEY = "prompt-gui-mcp.desktop.theme";
+  const COUNTDOWN_START_BEFORE_DEADLINE_MS = 60_000;
+  const TIMEOUT_ALERT_THRESHOLD_MS = 15_000;
 
   let state: HumanTaskState = {
     activeTask: null,
@@ -32,25 +34,51 @@
   let fieldErrors: FieldErrors = {};
   let submitError = "";
   let isSubmitting = false;
+  let isExtendingWait = false;
+  let nowMs = Date.now();
+  let countdownTimer: number | null = null;
   let taskLayoutElement: HTMLElement | null = null;
   let taskBodyElement: HTMLDivElement | null = null;
+  let isTimeoutAlertOpen = false;
+  let timeoutAlertDismissedKey: string | null = null;
 
   const WINDOW_RESIZE_HEIGHT_BUFFER = 8;
 
   const themeOptions: Array<{ id: ThemeId; label: string }> = [
     { id: "light", label: "Light" },
-    { id: "dart", label: "Dart" },
+    { id: "dark", label: "Dark" },
     { id: "doraemon", label: "Doraemon" }
   ];
 
   $: activeTask = state.activeTask;
+  $: deadlineAtMs = activeTask ? Date.parse(activeTask.deadlineAt) : null;
+  $: remainingMs =
+    deadlineAtMs === null ? 0 : Math.max(0, deadlineAtMs - nowMs);
+  $: countdownSeconds = Math.ceil(remainingMs / 1000);
+  $: showCountdown =
+    Boolean(activeTask) && remainingMs <= COUNTDOWN_START_BEFORE_DEADLINE_MS;
+  $: canExtendWait =
+    Boolean(activeTask) && showCountdown && !activeTask?.extensionUsed;
+  $: timeoutAlertKey =
+    activeTask && deadlineAtMs !== null ? `${activeTask.id}:${deadlineAtMs}` : null;
+  $: shouldShowTimeoutAlert =
+    Boolean(activeTask) &&
+    remainingMs > 0 &&
+    remainingMs <= TIMEOUT_ALERT_THRESHOLD_MS &&
+    timeoutAlertKey !== null &&
+    timeoutAlertDismissedKey !== timeoutAlertKey;
+  $: if (!shouldShowTimeoutAlert) {
+    isTimeoutAlertOpen = false;
+  } else if (!isTimeoutAlertOpen) {
+    isTimeoutAlertOpen = true;
+  }
   $: shortcutLabel = navigator.platform.includes("Mac") ? "Cmd" : "Ctrl";
   $: taskTitle =
     activeTask?.kind === "prompt-form" ? activeTask.title : "Human Task";
   $: taskHint =
     activeTask?.kind === "prompt-form"
       ? `${shortcutLabel}+Enter submits. Shift+Escape cancels.`
-      : `${shortcutLabel}+Enter completes. Shift+Enter marks failed.`;
+      : `${shortcutLabel}+Enter completes. Shift+Escape marks failed.`;
 
   $: if (activeTask?.id !== lastTaskId) {
     lastTaskId = activeTask?.id ?? null;
@@ -61,6 +89,8 @@
       activeTask?.kind === "prompt-form" ? createInitialFormValues(activeTask) : {};
     checkboxDetailValues =
       activeTask?.kind === "prompt-form" ? createInitialCheckboxDetailValues(activeTask) : {};
+    isTimeoutAlertOpen = false;
+    timeoutAlertDismissedKey = null;
 
     if (activeTask) {
       void bridge.focusWindow();
@@ -70,8 +100,10 @@
 
   onMount(() => {
     const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (savedTheme === "light" || savedTheme === "dart" || savedTheme === "doraemon") {
+    if (savedTheme === "light" || savedTheme === "dark" || savedTheme === "doraemon") {
       theme = savedTheme;
+    } else if (savedTheme === "dart") {
+      theme = "dark";
     }
 
     void bridge.setWindowTheme(theme);
@@ -79,6 +111,10 @@
     const unsubscribe = bridge.subscribe((nextState) => {
       state = nextState;
     });
+
+    countdownTimer = window.setInterval(() => {
+      nowMs = Date.now();
+    }, 1000);
 
     function onWindowClick(event: MouseEvent): void {
       if (!themeMenuWrap) {
@@ -98,6 +134,10 @@
     return () => {
       window.removeEventListener("click", onWindowClick);
       unsubscribe();
+      if (countdownTimer !== null) {
+        window.clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
     };
   });
 
@@ -105,7 +145,7 @@
     const values: FormValues = {};
 
     for (const field of task.form.fields) {
-      if (field.type === "markdown") {
+      if (field.type === "markdown" || field.type === "image") {
         continue;
       }
 
@@ -234,7 +274,7 @@
     const nextErrors: FieldErrors = {};
 
     for (const field of task.form.fields) {
-      if (field.type === "markdown" || field.disabled) {
+      if (field.type === "markdown" || field.type === "image" || field.disabled) {
         continue;
       }
 
@@ -281,7 +321,7 @@
     const values: FormValues = {};
 
     for (const field of task.form.fields) {
-      if (field.type === "markdown") {
+      if (field.type === "markdown" || field.type === "image") {
         continue;
       }
 
@@ -431,7 +471,7 @@
       return;
     }
 
-    if (activeTask.kind === "tell-human-to-do" && event.shiftKey && event.key === "Enter") {
+    if (activeTask.kind === "tell-human-to-do" && event.shiftKey && event.key === "Escape") {
       event.preventDefault();
       void submitTellHumanTask("failed");
       return;
@@ -440,6 +480,45 @@
     if (activeTask.kind === "prompt-form" && event.shiftKey && event.key === "Escape") {
       event.preventDefault();
       void submitPromptFormTask("cancelled");
+    }
+  }
+
+  async function openImagePreview(url: string): Promise<void> {
+    await bridge.openImagePreview(url);
+  }
+
+  async function extendWait(): Promise<boolean> {
+    if (!activeTask || !canExtendWait || isExtendingWait) {
+      return false;
+    }
+
+    isExtendingWait = true;
+    submitError = "";
+
+    try {
+      await bridge.extendTaskWait(activeTask.id);
+      return true;
+    } catch (error) {
+      submitError =
+        error instanceof Error ? error.message : "Failed to extend task wait.";
+      return false;
+    } finally {
+      isExtendingWait = false;
+    }
+  }
+
+  function dismissTimeoutAlert(): void {
+    isTimeoutAlertOpen = false;
+    if (timeoutAlertKey) {
+      timeoutAlertDismissedKey = timeoutAlertKey;
+    }
+  }
+
+  async function handleTimeoutAlertExtend(): Promise<void> {
+    const extended = await extendWait();
+    if (extended) {
+      isTimeoutAlertOpen = false;
+      timeoutAlertDismissedKey = null;
     }
   }
 </script>
@@ -509,6 +588,17 @@
                   {#if field.type === "markdown"}
                     <section class="field-card field-card--markdown">
                       <Markdown content={field.content} />
+                    </section>
+                  {:else if field.type === "image"}
+                    <section class="field-card field-card--image">
+                      <button
+                        class="image-field__button"
+                        type="button"
+                        on:click={() => void openImagePreview(field.url)}
+                        aria-label="Preview image"
+                      >
+                        <img class="image-field__img" src={field.url} alt={field.alt ?? "Prompt form image"} />
+                      </button>
                     </section>
                   {:else if field.type === "text"}
                     <label class="field-card" class:error={Boolean(fieldErrors[field.id])} for={field.id}>
@@ -751,14 +841,95 @@
           {/if}
         </div>
 
-        <p class="hint">{taskHint}</p>
+        <div class="task-layout__footer-meta">
+          <p class="hint">{taskHint}</p>
+          {#if showCountdown}
+            <div class="timeout-meta">
+              <span class="timeout-meta__text">timeout in {Math.max(0, countdownSeconds)} s</span>
+              {#if canExtendWait}
+                <button
+                  class="timeout-meta__button"
+                  type="button"
+                  disabled={isExtendingWait}
+                  on:click={() => void extendWait()}
+                >
+                  Keep waiting
+                </button>
+              {/if}
+            </div>
+          {/if}
+        </div>
+
+        {#if isTimeoutAlertOpen}
+          <div class="timeout-alert-overlay" role="presentation">
+            <div
+              class="timeout-alert"
+              role="alertdialog"
+              aria-modal="true"
+              aria-label="Timeout warning"
+            >
+              <p class="timeout-alert__title">Task will timeout soon</p>
+              <p class="timeout-alert__body">
+                Time remaining: {Math.max(0, countdownSeconds)}s
+              </p>
+              <div class="timeout-alert__actions">
+                <button
+                  class="button button--ghost timeout-alert__button"
+                  type="button"
+                  on:click={dismissTimeoutAlert}
+                >
+                  Got it
+                </button>
+                <button
+                  class="button button--primary timeout-alert__button"
+                  type="button"
+                  disabled={!canExtendWait || isExtendingWait}
+                  on:click={() => void handleTimeoutAlertExtend()}
+                >
+                  Extend time
+                </button>
+              </div>
+            </div>
+          </div>
+        {/if}
       </section>
     {:else}
       <section class="empty-state" aria-live="polite">
-        <p class="empty-state__title">No active task</p>
-        <p class="empty-state__body">
-          The app is ready for the next request.
-        </p>
+        <div class="empty-state__intro">
+          <p class="empty-state__title">No active task</p>
+          <p class="empty-state__body">
+            The app is ready for the next request.
+          </p>
+        </div>
+
+        <div class="setup-guide" aria-label="Agent setup guide">
+          <p class="setup-guide__title">Connect your agent</p>
+          <ol class="setup-guide__steps">
+            <li>Keep prompt-gui-mcp running.</li>
+            <li>
+              Add this Streamable HTTP endpoint:
+              <code>http://127.0.0.1:43118/mcp</code>
+              <div class="setup-guide__commands">
+                <div class="setup-guide__command">
+                  <span>Claude Code</span>
+                  <code>claude mcp add --transport http prompt-gui http://127.0.0.1:43118/mcp</code>
+                </div>
+                <div class="setup-guide__command">
+                  <span>Codex</span>
+                  <code>codex mcp add prompt-gui --url http://127.0.0.1:43118/mcp</code>
+                </div>
+                <div class="setup-guide__command">
+                  <span>Other MCP clients</span>
+                  <code>{"{\"type\":\"http\",\"url\":\"http://127.0.0.1:43118/mcp\"}"}</code>
+                </div>
+              </div>
+            </li>
+            <li>
+              Ask your coding agent to try it:
+              <code>Use the prompt-gui MCP server to ask me for my nickname, favorite project type, and hobbies.</code>
+            </li>
+          </ol>
+        </div>
       </section>
     {/if}
   </section>

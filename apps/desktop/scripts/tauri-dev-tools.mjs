@@ -43,7 +43,7 @@ export async function reservePort() {
 
 export async function createTempTauriConfig(devPort, beforeDevCommand) {
   const config = await readTauriConfig();
-  const tempDir = await mkdtemp(join(tmpdir(), "i-am-mcp-tauri-"));
+  const tempDir = await mkdtemp(join(tmpdir(), "prompt-gui-mcp-tauri-"));
   const configPath = join(tempDir, "tauri.temp.conf.json");
   const devUrl = `http://127.0.0.1:${devPort}`;
 

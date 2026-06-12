@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { logger } from "../logger.js";
 import { taskQueue } from "../services/runtime.js";
-import type { PromptFormResult } from "../types.js";
+import type { TaskResult } from "../types.js";
 
 const nonEmptyString = z.string().trim().min(1);
 
@@ -32,6 +32,13 @@ const markdownFieldSchema = z.object({
   type: z.literal("markdown"),
   id: nonEmptyString,
   content: nonEmptyString
+});
+
+const imageFieldSchema = z.object({
+  type: z.literal("image"),
+  id: nonEmptyString,
+  url: z.string().trim().url(),
+  alt: z.string().trim().min(1).optional()
 });
 
 const textFieldSchema = z.object({
@@ -78,6 +85,7 @@ const checkboxListFieldSchema = z.object({
 
 const promptFormFieldSchema = z.discriminatedUnion("type", [
   markdownFieldSchema,
+  imageFieldSchema,
   textFieldSchema,
   textareaFieldSchema,
   radioFieldSchema,
@@ -172,7 +180,7 @@ export const promptFormInputSchema = z.object({
 
 export type PromptFormInput = z.infer<typeof promptFormInputSchema>;
 
-export async function handlePromptForm(rawInput: unknown): Promise<PromptFormResult> {
+export async function handlePromptForm(rawInput: unknown): Promise<TaskResult> {
   const input = promptFormInputSchema.parse(rawInput);
 
   logger.info(

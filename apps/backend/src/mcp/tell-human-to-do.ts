@@ -9,7 +9,7 @@ export type TellHumanToDoInput = z.infer<typeof tellHumanToDoInputSchema>;
 
 export async function handleTellHumanToDo(
   rawInput: unknown
-): Promise<import("../types.js").TellHumanToDoResult> {
+): Promise<import("../types.js").TaskResult> {
   const input = tellHumanToDoInputSchema.parse(rawInput);
 
   logger.info(

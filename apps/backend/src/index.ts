@@ -9,6 +9,11 @@ import {
   handleTellHumanToDo,
   tellHumanToDoInputSchema
 } from "./mcp/tell-human-to-do.js";
+import {
+  handleWaitForPrompt,
+  waitForPromptInputSchema,
+  type WaitForPromptInput
+} from "./mcp/wait-for-prompt.js";
 import { startBackendHttpServer } from "./transport/http.js";
 
 const DEFAULT_SERVER_PORT = 43118;
@@ -33,20 +38,43 @@ function resolveServerPort(): number {
 
 function createMcpServer(): McpServer {
   const server = new McpServer({
-    name: "i-am-mcp-backend",
+    name: "prompt-gui-mcp-backend",
     version: "0.1.0"
   });
 
+  // server.registerTool(
+  //   "tell-human-to-do",
+  //   {
+  //     title: "Tell Human To Do",
+  //     description:
+  //       "Ask a human user to perform a real-world operation and return status + feedback. The instruction field supports markdown format including headers, lists, code blocks (with syntax highlighting), bold, italic, links, and more.",
+  //     inputSchema: tellHumanToDoInputSchema.shape
+  //   },
+  //   async (args: { instruction: string }) => {
+  //     const result = await handleTellHumanToDo(args);
+  //
+  //     return {
+  //       content: [
+  //         {
+  //           type: "text",
+  //           text: JSON.stringify(result)
+  //         }
+  //       ],
+  //       structuredContent: result
+  //     };
+  //   }
+  // );
+
   server.registerTool(
-    "tell-human-to-do",
+    "prompt-form",
     {
-      title: "Tell Human To Do",
+      title: "Prompt Form",
       description:
-        "Ask a human user to perform a real-world operation and return status + feedback. The instruction field supports markdown format including headers, lists, code blocks (with syntax highlighting), bold, italic, links, and more.",
-      inputSchema: tellHumanToDoInputSchema.shape
+        "Show a structured form in the desktop app and return structured user input plus free-form feedback.",
+      inputSchema: promptFormInputSchema.shape
     },
-    async (args: { instruction: string }) => {
-      const result = await handleTellHumanToDo(args);
+    async (args: PromptFormInput) => {
+      const result = await handlePromptForm(args);
 
       return {
         content: [
@@ -61,15 +89,15 @@ function createMcpServer(): McpServer {
   );
 
   server.registerTool(
-    "prompt-form",
+    "wait-for-prompt",
     {
-      title: "Prompt Form",
+      title: "Wait For Prompt",
       description:
-        "Show a structured form in the desktop app and return structured user input plus free-form feedback.",
-      inputSchema: promptFormInputSchema.shape
+        "Continue waiting on an existing prompt UUID after receiving a keep-waiting response.",
+      inputSchema: waitForPromptInputSchema.shape
     },
-    async (args: PromptFormInput) => {
-      const result = await handlePromptForm(args);
+    async (args: WaitForPromptInput) => {
+      const result = await handleWaitForPrompt(args);
 
       return {
         content: [

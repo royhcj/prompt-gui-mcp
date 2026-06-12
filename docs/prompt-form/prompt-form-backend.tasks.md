@@ -18,7 +18,7 @@
 ## 3. MCP Tool Tasks
 
 - [x] Create `apps/backend/src/mcp/prompt-form.ts` with the new tool input schema and handler.
-- [x] Define `zod` field schemas for `markdown`, `text`, `textarea`, `radio`, and `select` in `apps/backend/src/mcp/prompt-form.ts`.
+- [x] Define `zod` field schemas for `markdown`, `image`, `text`, `textarea`, `radio`, and `select` in `apps/backend/src/mcp/prompt-form.ts`.
 - [x] Add cross-field validation for duplicate field ids in `apps/backend/src/mcp/prompt-form.ts`.
 - [x] Add validation for invalid option sets and invalid `defaultValue` references in `apps/backend/src/mcp/prompt-form.ts`.
 - [x] Normalize `submitLabel` and `cancelLabel` defaults in `apps/backend/src/mcp/prompt-form.ts`.
