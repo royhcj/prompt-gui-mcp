@@ -7,12 +7,23 @@ Instead of forcing an agent to guess, stall, or ask you in chat, the agent can c
 For example, send this prompt to your agent:
 
 ```text
-Use prompt-gui-mcp to show me a form with questions that will help you recommend a travel destination. Ask about my preferences, travel season, budget, trip style, and any other details you need.
+Use prompt-gui-mcp to show me a form with questions that will help you recommend a travel destination.
+Ask about my preferences, travel season, budget, trip style, and any other details you need.
 ```
 
 opens a desktop form like this:
 
-![Travel preference prompt form](docs/assets/prompt-form-travel-example.png)
+<img src="docs/assets/prompt-form-travel-example.png" alt="Travel preference prompt form" width="50%">
+
+```mermaid
+flowchart LR
+  Agent["AI coding agent"] -->|Calls prompt-form| MCP["prompt-gui-mcp"]
+  MCP -->|Opens GUI form| App["Desktop app"]
+  App -->|Shows prompt| User["You"]
+  User -->|Submits answers| App
+  App -->|Returns structured data| MCP
+  MCP -->|Tool result| Agent
+```
 
 ## What It Does
 
@@ -33,7 +44,7 @@ The current MCP tools are:
 
 Only the macOS app is packaged right now.
 
-1. Open the [GitHub Releases page](https://github.com/royhcj/i-am-mcp/releases).
+1. Open the [GitHub Releases page](https://github.com/royhcj/prompt-gui-mcp/releases).
 2. Download the latest macOS `.dmg` or `.zip` asset.
 3. Install and launch `prompt-gui-mcp`.
 4. Keep the app running while your coding agent uses the MCP server.
