@@ -13,7 +13,7 @@ Ask about my preferences, travel season, budget, trip style, and any other detai
 
 opens a desktop form like this:
 
-<img src="docs/assets/prompt-form-travel-example.png" alt="Travel preference prompt form" width="50%">
+<img src="docs/assets/prompt-form-travel-example.png" alt="Travel preference prompt form" width="320">
 
 ```mermaid
 flowchart LR
