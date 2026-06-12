@@ -5,7 +5,7 @@
 Implement the timeout/keep-waiting workflow from [timeout.md](/Users/roy/dev/projects/i-am-mcp/i-am-mcp/docs/timeout.md) so the coding agent can continue waiting safely beyond short host timeouts, while still enforcing a hard max wait.
 
 Outcome:
-- prompt tools return `keep-waiting` after 90 seconds when user input is not ready
+- prompt tools return `keep-waiting` after 30 seconds when user input is not ready
 - coding agent can call `wait-for-prompt(promptUuid)` repeatedly
 - user replies are delivered to the next `wait-for-prompt` call (including the gap case)
 - default timeout is 5 minutes
@@ -85,7 +85,7 @@ Files:
 
 Plan:
 - extend queue internals to track per-prompt wait state (`promptUuid`, timers, deadline, extension flag)
-- implement 90-second keep-waiting cadence
+- implement 30-second keep-waiting cadence
 - implement 5-minute default timeout and 10-minute one-time extension behavior
 - model explicit states: waiting for user, waiting for agent (`wait-for-prompt`), completed, timed-out
 - implement pending terminal buffering so user reply/timeout during the gap is stored and delivered on next `wait-for-prompt`
@@ -163,7 +163,7 @@ Expected outcome:
 ## 6. Validation And Testing Plan
 
 Minimum verification:
-- initial prompt call returns `keep-waiting` at ~90s when no user reply
+- initial prompt call returns `keep-waiting` at ~30s when no user reply
 - repeated `wait-for-prompt` continues loop with the same `promptUuid`
 - user reply before first keep-waiting returns terminal user result
 - user reply during keep-waiting gap is buffered and returned on next `wait-for-prompt`

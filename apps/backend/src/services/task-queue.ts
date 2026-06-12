@@ -13,7 +13,7 @@ import type {
   TimeoutResult
 } from "../types.js";
 
-const KEEP_WAITING_INTERVAL_MS = 90_000;
+const KEEP_WAITING_INTERVAL_MS = 30_000;
 const DEFAULT_MAX_WAIT_MS = 300_000;
 const EXTENDED_MAX_WAIT_MS = 600_000;
 

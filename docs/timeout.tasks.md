@@ -11,7 +11,7 @@
 
 - [ ] Refactor [apps/backend/src/services/task-queue.ts](/Users/roy/dev/projects/i-am-mcp/i-am-mcp/apps/backend/src/services/task-queue.ts) to track per-prompt waiting state and timers.
 - [ ] Generate and store `promptUuid` for each new prompt task in [apps/backend/src/services/task-queue.ts](/Users/roy/dev/projects/i-am-mcp/i-am-mcp/apps/backend/src/services/task-queue.ts).
-- [ ] Implement 90-second keep-waiting tick behavior in [apps/backend/src/services/task-queue.ts](/Users/roy/dev/projects/i-am-mcp/i-am-mcp/apps/backend/src/services/task-queue.ts).
+- [ ] Implement 30-second keep-waiting tick behavior in [apps/backend/src/services/task-queue.ts](/Users/roy/dev/projects/i-am-mcp/i-am-mcp/apps/backend/src/services/task-queue.ts).
 - [ ] Implement default 5-minute timeout and terminal timeout result behavior in [apps/backend/src/services/task-queue.ts](/Users/roy/dev/projects/i-am-mcp/i-am-mcp/apps/backend/src/services/task-queue.ts).
 - [ ] Implement one-time extension to 10 minutes total in [apps/backend/src/services/task-queue.ts](/Users/roy/dev/projects/i-am-mcp/i-am-mcp/apps/backend/src/services/task-queue.ts).
 - [ ] Implement gap buffering: store user reply/timeout when no wait call is open, and return it on next `wait-for-prompt`, in [apps/backend/src/services/task-queue.ts](/Users/roy/dev/projects/i-am-mcp/i-am-mcp/apps/backend/src/services/task-queue.ts).
@@ -60,7 +60,7 @@
 ## 8. Verification Tasks
 
 - [ ] Verify prompt creation responses include `promptUuid`.
-- [ ] Verify `keep-waiting` is returned after 90 seconds when user has not replied.
+- [ ] Verify `keep-waiting` is returned after 30 seconds when user has not replied.
 - [ ] Verify `wait-for-prompt(promptUuid)` continues waiting loop and returns repeated `keep-waiting` until terminal outcome.
 - [ ] Verify user reply before first keep-waiting returns terminal user result.
 - [ ] Verify user reply during keep-waiting gap is returned by the next `wait-for-prompt` call.

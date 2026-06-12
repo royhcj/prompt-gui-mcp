@@ -6,7 +6,7 @@ Make `prompt-gui-mcp` resilient when the coding agent does not keep one tool cal
 
 New behavior:
 - do not block forever on the initial tool call
-- return periodic `keep-waiting` responses every 90 seconds while waiting for user input
+- return periodic `keep-waiting` responses every 30 seconds while waiting for user input
 - require the coding agent to call `wait-for-prompt` with a prompt UUID to continue waiting
 - stop waiting at a max wait deadline (default 5 minutes)
 - show a UI countdown in the final 60 seconds before timeout
@@ -32,15 +32,15 @@ This spec adds a new MCP tool:
 ## 4. Timing Rules
 
 Default constants:
-- `KEEP_WAITING_INTERVAL_MS = 90_000`
+- `KEEP_WAITING_INTERVAL_MS = 30_000`
 - `DEFAULT_MAX_WAIT_MS = 300_000` (5 minutes)
 - `EXTENDED_MAX_WAIT_MS = 600_000` (10 minutes total from creation)
 - `COUNTDOWN_START_BEFORE_DEADLINE_MS = 60_000`
 
 Behavior:
 - Start timers when prompt is created.
-- If user has not replied after 90 seconds, return `keep-waiting` on the currently open wait call.
-- Continue every 90 seconds until a terminal outcome (`user-reply` or `timeout`).
+- If user has not replied after 30 seconds, return `keep-waiting` on the currently open wait call.
+- Continue every 30 seconds until a terminal outcome (`user-reply` or `timeout`).
 - At deadline, return `timeout` (terminal).
 
 ## 5. MCP Contract
@@ -61,9 +61,9 @@ Example `keep-waiting` payload:
   "type": "keep-waiting",
   "promptUuid": "a7f1f2a2-04dc-449f-91d8-6862462bdd87",
   "message": "The user is still working on this prompt. Call 'wait-for-prompt' with this promptUuid to continue waiting.",
-  "nextRecommendedWaitMs": 90000,
-  "elapsedMs": 90000,
-  "remainingMs": 210000
+  "nextRecommendedWaitMs": 30000,
+  "elapsedMs": 30000,
+  "remainingMs": 270000
 }
 ```
 
@@ -138,7 +138,7 @@ Extend action:
   - hide button if `extensionUsed = true`
 
 After extension:
-- keep-waiting loop continues with same 90-second interval.
+- keep-waiting loop continues with same 30-second interval.
 - countdown appears again in the final 60 seconds before the new deadline.
 
 ## 9. Sequence Diagram
@@ -154,12 +154,12 @@ sequenceDiagram
   Backend->>Backend: create promptUuid + timers
   Backend-->>UI: show prompt dialog
 
-  loop Every 90s before terminal outcome
+  loop Every 30s before terminal outcome
     alt User has not replied yet
       Backend-->>Agent: keep-waiting(promptUuid)
       Note over Agent,Backend: Agent should call wait-for-prompt(promptUuid)
       Agent->>Backend: wait-for-prompt(promptUuid)
-    else User replies before 90s tick
+    else User replies before 30s tick
       User->>UI: submit reply
       UI->>Backend: user result
       Backend-->>Agent: user-reply(promptUuid, result)
@@ -208,7 +208,7 @@ When the coding agent receives a `timeout` response for a `promptUuid`, it must:
 ## 12. Acceptance Criteria
 
 - Prompt gets a UUID at creation and UUID is returned in all related responses.
-- If no user reply for 90 seconds, agent receives `keep-waiting`.
+- If no user reply for 30 seconds, agent receives `keep-waiting`.
 - Agent can continue by calling `wait-for-prompt(promptUuid)` repeatedly.
 - If user replies during the gap, result is held and returned on the next `wait-for-prompt`.
 - System stops waiting at 5 minutes by default and returns `timeout`.
