@@ -10,7 +10,8 @@
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "prepare:sidecar": "node scripts/prepare-sidecar.mjs",
     "tauri:dev": "node scripts/run-tauri-dev.mjs",
-    "tauri:build": "tauri build"
+    "tauri:build": "node scripts/tauri-build.mjs",
+    "repair:macos-sidecar": "node scripts/repair-macos-sidecar-signing.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.8.0",
