@@ -27,7 +27,7 @@ async function main(): Promise<void> {
 
   const client = new Client({
     name: "prompt-gui-mcp-simulator",
-    version: "0.1.0"
+    version: "0.1.2"
   });
 
   await client.connect(transport);
