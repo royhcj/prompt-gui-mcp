@@ -28,10 +28,22 @@ flowchart LR
 ## What It Does
 
 - Shows flexible forms generated from an MCP tool call.
-- Agents can compose forms with elements such as text, textarea, radio, select, checkbox-list, markdown, and image fields.
+- Agents can compose forms with multiple input and content elements.
 - Returns the user's validated answers to the calling agent.
 - Keeps the prompt in a small always-on-top desktop window.
 - Includes a follow-up wait tool so agents can continue waiting when a prompt takes longer than their normal tool timeout.
+
+## Available Form Elements
+
+| Element | Use it for |
+| --- | --- |
+| `text` | Short free-form answers. |
+| `textarea` | Longer notes, descriptions, or feedback. |
+| `radio` | Choosing one option from a visible list. |
+| `select` | Choosing one option from a dropdown. |
+| `checkbox-list` | Choosing multiple options, with optional details per option. |
+| `markdown` | Instructions, context, links, or formatted content inside the form. |
+| `image` | Showing visual references or examples inside the form. |
 
 The current MCP tools are:
 
